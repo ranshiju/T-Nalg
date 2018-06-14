@@ -495,6 +495,7 @@ class MpsOpenBoundaryClass:
                 if abs(coeff2[n]) > tol:
                     inputs.append((p, index2[n, 2:4], index2[n, :2]))
             tmp = self.pool.map(self.environment_s1_s2, inputs)
+            self.pool.join()
             h_effect += self.calculate_environment_for_parallel(tmp, np.prod(s))
         h_effect = (h_effect + h_effect.conj().T) / 2
         return h_effect, s
