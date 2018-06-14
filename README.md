@@ -20,5 +20,5 @@ Tensor Netwok Algorithms for EVERYONE
 ### Some notes: 
     1.Your parameters are saved in '.\para_dmrg\_para.pr' 
     2.To read *.pr, use function 'load_pr' in 'Basic_functions_SJR.py' 
-    3.The results including the MPS will be save in '.\data_dmrg' ===================================================================== 
+    3.The results including the MPS will be save in '.\data_dmrg' 
 * Before using, you need to install numpy, scipy, and matplotlib in your python
