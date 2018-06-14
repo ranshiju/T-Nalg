@@ -3,7 +3,7 @@ from Basic_Functions_SJR import sort_list, trace_stack, print_error, arg_find_ar
 from termcolor import cprint
 is_debug = False
 if is_debug:
-    cprint('Note: you are in the debug mode', 'cyan')
+    cprint('Note: you are in the debug mode of module \'Basic_Functions_SJR\'', 'cyan')
 
 
 def random_open_mps(l, d, chi):

@@ -6,7 +6,6 @@ from Hamiltonian_Module import spin_operators
 from Basic_Functions_SJR import empty_list, trace_stack, sort_list, print_error, print_sep, \
     print_options, print_dict, info_contact
 from termcolor import colored, cprint
-from multiprocessing.dummy import Pool as ThreadPool
 
 
 class MpsOpenBoundaryClass:
@@ -37,7 +36,7 @@ class MpsOpenBoundaryClass:
         number of interaction terms, and use the second with a relatively large bond dimension cut-off
     """
     def __init__(self, length, d, chi, spin='half', way='qr', ini_way='r', debug=False,
-                 is_parallel=False, is_save_op=False, eig_way=0):
+                 is_parallel=False, is_save_op=False, eig_way=0, par_pool=None):
         self.version = '2018-06-2'
         self.spin = spin
         self.phys_dim = d
@@ -65,14 +64,15 @@ class MpsOpenBoundaryClass:
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
 
         self._is_parallel = is_parallel
-        self.n_nodes = 4
+        self.pool = par_pool
 
         self._debug = debug  # if in debug mode
         self.eig_way = eig_way
 
         if self._is_parallel and self._is_save_op:
-            cprint('Note: the code forbid to use parallel computing while in the is_save_op mode', 'cyan')
-            cprint('Now, one the parallel computing will be used. is_save_op is switched off', 'magenta')
+            cprint('Note: this version forbids to use parallel computing while in the is_save_op mode', 'cyan')
+            cprint('The is_save_op mode has been automatically switched off', 'magenta')
+            cprint('This issue will be fixed in the next version', 'cyan')
             self._is_save_op = False
         if debug:
             cprint('Note: you are in the debug mode', 'cyan')
@@ -80,9 +80,8 @@ class MpsOpenBoundaryClass:
             cprint('Note: you are in the is_save_op mode. The code will save intermediate results to accelerate '
                    'the computation', 'cyan')
         if self._is_parallel:
-            cprint('Note: you are using parallel computing. The parallel computing will only take effect while '
+            cprint('Note: you are using parallel computing. The parallel computing will be used when '
                    'computing the environment for different different coupling terms', 'cyan')
-            self.pool = ThreadPool(self.n_nodes)
 
     def print_general_info(self):
         print_sep('DMRG & MPS Documentation (%s)' % self.version, style='#')
@@ -199,15 +198,15 @@ class MpsOpenBoundaryClass:
     def key_restore_info(key):
         return key.split('_')
 
-    def add_key_and_pos(self, which_op, info, op):
-        key = self.key_effective_operators(info)
+    def add_key_and_pos(self, which_op, key_info, op):
+        key = self.key_effective_operators(key_info)
         if which_op is 'one':
             if key not in self.effect_s:
-                self.pos_effect_s = np.vstack((self.pos_effect_s, np.array(info)))
+                self.pos_effect_s = np.vstack((self.pos_effect_s, np.array(key_info)))
             self.effect_s[key] = op
         elif which_op is 'two':
             if key not in self.effect_ss:
-                self.pos_effect_ss = np.vstack((self.pos_effect_ss, np.array(info)))
+                self.pos_effect_ss = np.vstack((self.pos_effect_ss, np.array(key_info)))
             self.effect_ss[key] = op
 
     def find_nearest_key_one_body(self, sn, p0, p1):
@@ -530,6 +529,7 @@ class MpsOpenBoundaryClass:
                 if abs(coeff2[n]) > tol:
                     inputs.append((p, index2[n, 2:4], index2[n, :2]))
             env2 = self.pool.map(self.environment_s1_s2, inputs)
+            self.pool.join()
         return env1, env2, s
 
     @ staticmethod
@@ -816,9 +816,7 @@ class MpsOpenBoundaryClass:
         self.effect_ss = {'none': np.zeros(0)}
         self.pos_effect_s = np.zeros((0, 3)).astype(int)
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
-        if self._is_parallel:
-            self.pool.close()
-            self.pool.join()
+
 
 
 
