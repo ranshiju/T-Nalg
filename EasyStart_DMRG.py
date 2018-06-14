@@ -9,8 +9,8 @@ from Basic_Functions_SJR import input_and_check_type, input_and_check_value, \
 from Tensor_Basic_Module import sort_vectors
 from DMRG_anyH import dmrg_finite_size
 
-is_from_input = False
-is_load_data = False
+is_from_input = True
+is_load_data = True
 
 
 def print_info_to_be_added(model, method):
