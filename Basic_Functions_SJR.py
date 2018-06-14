@@ -47,6 +47,22 @@ def save_pr(path, file, data, names):
 
 
 def load_pr(path_file, names=None):
+    """
+    Load the file saved by save_pr as a dict from path
+    :param path_file: the path and name of the file
+    :param names: the specific names of the data you want to load
+    :return  the file you loaded
+    Notes: the file you load should be a  \'.pr\' file.
+    Example:
+        >>> x = 1
+        >>> y = 'good'
+        >>> z = [1, 2, 3]
+        >>> save_pr('.\\test', 'ok.pr', [x, y, z], ['name1', 'name2', 'name3'])
+        >>> A = load_pr('.\\test\\ok.pr')
+          A = {'name1': 1, 'name2': 'good'}
+        >>> A = load_pr('\\test\\ok.pr', ['name2', 'name3'])
+          A = {'name2': 'a', 'name3': [1, 2, 3] }
+    """
     if os.path.isfile(path_file):
         s = open(path_file, 'rb')
         if names is None:
@@ -69,6 +85,12 @@ def load_pr(path_file, names=None):
 
 
 def mkdir(path):
+    """
+       Create a folder at your path
+       :param path: the path of the folder you wish to create
+       :return: the path of folder being created
+       Notes: if the folder already exist, it will not create a new one.
+    """
     path = path.strip()
     path = path.rstrip("\\")
     path_flag = os.path.exists(path)
@@ -78,15 +100,49 @@ def mkdir(path):
 
 
 def sort_list(a, order):
+    """
+    Return the elements of order in list
+    :param a: name of the list
+    :param order: the order of elements you want to sort
+    :return: the new list contains only elements in the order
+    Example:
+        >>> a = [1, 2, 'a', 'b']
+        >>> order = [1,3]
+        >>> z = sort_list(a, order)
+          z = [2, 'b']
+    """
     return [a[i] for i in order]
 
 
 def empty_list(n, content=None):
+    """
+    Create a list of size n with elements as None or content
+    :param n: the size of list
+    :param content: the content of all elements
+    :return: a size n list with all elements are content
+    Example:
+        >>> z = empty_list(3)
+          z = [None, None, None]
+        >>> z = empty_list(4, 'a')
+          z = ['a', 'a', 'a', 'a']
+    """
     # make a empty list of size n
     return [content for _ in range(0, n)]
 
 
 def arg_find_array(arg, n=1, which='first'):
+    """
+    Find the position of positions of elements required
+    :param arg:  requirement of the elements needed to fulfil
+    :param n:  number of how many elements you need
+    :param which:  the first n elements or last elements
+    :return:  the position of elements you need
+    Notes: 1.arg should be boolean type, 2. if can't find n elements to suit your need, it will return all it can find
+    Example:
+        >>> x = numpy.array([-1, 2, -3])
+        >>> z = arg_find_array(x < 0, 1, last)
+          z = [2]
+    """
     # find the first/last n True's in the arg
     # like the "find" function in Matlab
     # the input must be array or ndarray
