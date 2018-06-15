@@ -101,8 +101,8 @@ def mkdir(path):
 
 def sort_list(a, order):
     """
-    Return the elements of order in list
-    :param a: name of the list
+    Return the elements sorted in the given order
+    :param a: an iterable object
     :param order: the order of elements you want to sort
     :return: the new list contains only elements in the order
     Example:
@@ -139,37 +139,40 @@ def arg_find_array(arg, n=1, which='first'):
     :return:  the position of elements you need
     Notes: 1.arg should be boolean type, 2. if can't find n elements to suit your need, it will return all it can find
     Example:
-        >>> x = numpy.array([-1, 2, -3])
-        >>> z = arg_find_array(x < 0, 1, last)
-          z = [2]
+        >>> x = np.array([-1, 2, -3])
+        >>> z = arg_find_array(x < 0, 1, 'last')
+          z = 2
     """
     # find the first/last n True's in the arg
     # like the "find" function in Matlab
     # the input must be array or ndarray
     x = np.nonzero(arg)
     length = x[0].size
-    num = min(length, n)
-    dim = arg.ndim
-    if dim > 1 and (not (dim == 2 and arg.shape[1] == 1)):
-        y = np.zeros((dim, num), dtype=int)
-        if which == 'last':
-            for i in range(0, dim):
-                y[i, :] = x[i][length-num:length]
-        else:
-            for i in range(0, dim):
-                y[i, :] = x[i][:num]
+    if length == 0:
+        y = np.zeros(0)
     else:
-        if which == 'last':
-            y = x[0][length - num:length]
+        num = min(length, n)
+        dim = arg.ndim
+        if dim > 1 and (not (dim == 2 and arg.shape[1] == 1)):
+            y = np.zeros((dim, num), dtype=int)
+            if which == 'last':
+                for i in range(0, dim):
+                    y[i, :] = x[i][length-num:length]
+            else:
+                for i in range(0, dim):
+                    y[i, :] = x[i][:num]
         else:
-            y = x[0][:num]
-        if n == 1:
-            y = y[0]
+            if which == 'last':
+                y = x[0][length - num:length]
+            else:
+                y = x[0][:num]
+            if n == 1:
+                y = y[0]
     return y
 
 
 # =========================================
-# Print & Check functions
+# Print or Check functions
 def trace_stack(level0=2):
     # print the line and file name where this function is used
     info = inspect.stack()
@@ -210,15 +213,18 @@ def print_sep(info='', style='=', length=40, color='cyan'):
         dl = l_new % 2
         l_new = int(l_new/2)
         l_new = max(l_new, 0)
-        mes = style*l_new + ' ' + info + ' ' + style*(l_new + dl)
+        mes = style*max(l_new, 0) + ' ' + info + ' ' + style*((l_new + dl)*(l_new > 0))
         cprint(mes, color)
 
 
-def print_options(options, start=1, welcome='', style_sep=': ', end='    ', color='cyan'):
+def print_options(options, start=1, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
     message = welcome
     length = len(options)
     for i in range(0, length):
-        message += colored(str(i + start) + style_sep + options[i], color)
+        if quote is None:
+            message += colored(str(i + start) + style_sep + options[i], color)
+        elif type(quote) is str:
+            message += colored(str(i + start) + style_sep + quote + options[i] + quote, color)
         if i < length-1:
             message += end
     print(message)
@@ -242,7 +248,7 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
                 else:
                     value = eval(input(name + ' should be ' + str(right_type) + ', please input again: '))
             some_error = False
-        except NameError or ValueError or SyntaxError:
+        except(NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
     if print_result:
         print('You have set ' + colored(dict_name + '[\'' + name + '\'] = ' + str(value), 'cyan'))
@@ -257,7 +263,7 @@ def input_and_check_value(right_value, values_str=(), names='', dict_name='', st
         try:
             input_bad = True
             while input_bad:
-                value = input('Please input your choose: ')
+                value = input('Please input your choice: ')
                 if value.__len__() > 0:
                     value = eval(value)
                     input_bad = False
@@ -269,7 +275,7 @@ def input_and_check_value(right_value, values_str=(), names='', dict_name='', st
                     value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
                                        + ', please input again: '))
             some_error = False
-        except NameError or ValueError or SyntaxError:
+        except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
     if values_str.__len__() > 0:
         if start_ind < 0:
@@ -285,26 +291,35 @@ def check_condition(x, cond):
         return False
     try:
         return cond(x)
-    except TypeError or IndexError or ValueError:
+    except (TypeError, IndexError, ValueError):
         cprint('Wrong input in check_condition')
         return False
 
 
 def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms', max_len=100,
-                                        key_stop=-1, is_print=False):
-    # cond(inout) is True or False, a function to judge if the input is satisfictary
+                                        key_stop=-1, key_clear=-3, is_print=False):
+    # cond(inout) is True or False, a function to judge if the input is satisfactory
+    if is_print:
+        cprint('To finish inputting, input -1', 'cyan')
+        cprint('To clear all the inputs and start over, input -3', 'cyan')
     output = set()
     # add the type of the key_stop in the tuple of the right types
-    if type(right_type0) is tuple:
-        right_type = right_type0 + (type(key_stop), )
-    elif type(right_type0) is type:
-        right_type = (right_type0, type(key_stop))
+    if type(right_type0) is type:
+        right_type = {right_type0, type(key_stop), type(key_clear)}
+    else:
+        if type(right_type0) is tuple:
+            right_type0 = set(right_type0)
+        right_type = right_type0 | {type(key_stop), type(key_clear)}
+    right_type = tuple(right_type)
     not_stop = True
     while not_stop:
         new = input_and_check_type(right_type, name, False)
         if new == key_stop:
             cprint('You input the key to stop. Input completed.', 'cyan')
             not_stop = False
+        elif new == key_clear:
+            output.clear()
+            cprint('You have cleared all the inputs.', 'cyan')
         elif not check_condition(new, cond):
             cprint('The input is invalid since it does not satisfy the condition', 'magenta')
         elif not isinstance(new, right_type0):

@@ -2,14 +2,12 @@ import numpy as np
 import os.path as o_path
 import matplotlib.pyplot as mp
 from termcolor import cprint, colored
-from Parameters import parameter_dmrg
 from Basic_Functions_SJR import input_and_check_type, input_and_check_value, \
     save_pr, load_pr, print_options, print_sep, plot_square_lattice, input_and_check_type_multiple_items, \
     plot_connections_polar
-from Tensor_Basic_Module import sort_vectors
-from DMRG_anyH import dmrg_finite_size
+from DMRG_anyH import dmrg_finite_size, sort_positions, positions_set2array
 
-is_from_input = True
+is_from_input = False
 is_load_data = True
 
 
@@ -21,29 +19,6 @@ def print_info_ref(topic, ref, url_ref):
     print(colored(topic + ': ' + ref, 'cyan') + ' (' + url_ref + ')')
 
 
-def positions_set2array(pos_set):
-    nh = pos_set.__len__()
-    pos_set = list(pos_set)
-    pos = np.zeros((nh, 2))
-    for n in range(0, nh):
-        pos[n, :] = np.array(pos_set[n])
-    pos = pos.astype(int)
-    pos -= np.min(pos)
-    p_max = np.max(pos)
-    for i in range(p_max-1, 0, -1):
-        number = np.nonzero(pos == i)[0].size
-        if number == 0:
-            pos -= (pos > i)
-    return pos
-
-
-def sort_positions(pos, which='ascend'):
-    order = np.argsort(pos[:, 0])
-    if which is 'descend':
-        order = order[::-1]
-    return sort_vectors(pos, order, 'row')
-
-
 # =========================================================
 print('Thanks for using EasyStart_DMRG!' + colored('(v2018.06-1, by S.J Ran)', 'cyan'))
 print_sep()
@@ -53,8 +28,8 @@ print('Important: you need to install ' + colored('numpy, scipy, and matplotlib'
 print('You are more than welcome to use/modify our code for any simulations.')
 print('GitHub: https://github.com/ranshiju/TensorNetworkClassLibary')
 print('ResearchGate: www.researchgate.net/project/TN-Encoding-and-Applications')
-print('It would greatly appreciated to ' +
-      colored('cite our review paper (https://arxiv.org/abs/1708.09213)', 'cyan') + ' if possible')
+print('If our code helps your project, please cite our TN review:  S. J. Ran, et. al, arxiv.org/abs/1708.09213' +
+      '\n(https://arxiv.org/abs/1708.09213)')
 
 print_sep('Info: coming updates')
 print_info_to_be_added('Finite-size square lattices', 'DMRG')
@@ -108,6 +83,7 @@ if is_from_input:
               colored('0 $\leq$ n1 < n2', 'cyan') + ', or the input will be ' + colored('invalid', 'magenta'))
         cprint('These numbers determine how the sites are located in the MPS, '
                'so optimize the numbering if possible', 'cyan')
+
         position_set = input_and_check_type_multiple_items(tuple, lambda values: values[0] < values[1],
                                                            'positions_h2 (input ' + colored('-1', 'cyan') +
                                                            ' to finish)', is_print=True)
@@ -153,17 +129,18 @@ if is_from_input:
     else:
         para['data_exp'] = para['lattice'] + para['data_exp']
 else:
-    para = parameter_dmrg()
+    from Parameters import generate_parameters_dmrg
+    para = generate_parameters_dmrg()
 
 data_full_name = para['data_path'] + para['data_exp'] + '.pr'
 save_pr('.\\para_dmrg\\', '_para.pr', (para,), ('para',))
 print('The parameter have been saved as ' + colored('.\\para_dmrg\_para.pr', 'green'))
 
 print_sep('Start DMRG simulation')
-if is_load_data and o_path.isfile(data_full_name) and (para['lattice'] is not 'arbitrary'):
+if is_load_data and o_path.isfile(data_full_name) and (para['lattice'] in ('chain', 'square')):
     print('The data exists in ' + para['data_path'].rstrip("\\") + '. Load directly...')
     ob, A = load_pr(data_full_name, ('ob', 'A'))
-elif (not is_load_data) or (not o_path.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
+elif (not is_load_data) or (not o_path.isfile(data_full_name)):
     ob, A, info, para = dmrg_finite_size(para)
 if (not o_path.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
     if A._is_parallel:
