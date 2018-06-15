@@ -45,4 +45,4 @@ Tensor Netwok Algorithms for EVERYONE
  [5] ODTNS: Shi-Ju Ran, Wei Li, Bin Xi, Zhe Zhang, and Gang Su. Optimized decimation of tensor networks with super-orthogonalization for two-dimensional quantum lattice models. Phys. Rev. B 86, 134429 (2012).  
  [6] AOP (1D): Shi-Ju Ran. Ab initio optimization principle for the ground states of translationally invariant strongly-correlated quantum lattice models. Phys. Rev. E 93, 053310 (2016).  
  [7] AOP (2D and 3D): Shi-Ju Ran, Angelo Piga, Cheng Peng, Gang Su, and Maciej Lewenstein. Few-body systems capture many-body physics: Tensor network approach. Phys. Rev. B 96, 155120 (2017).   
- [8] Shi-JU Ran et al. in preparation.
+ [8] Shi-Ju Ran, et al., in preparation.
