@@ -5,19 +5,19 @@ Tensor Netwok Algorithms for EVERYONE
 
 ## DMRG for any finite-size lattices
 ### Two ways of using DMRG:
-  1. Set up Parameters.py and run dmrg_finite_size in DMRG_anyH.py
+  1. Set up Parameters.py and run dmrg_finite_size in DMRG_anyH.py    
     >>> import DMRG_anyH   
     >>> dmrg_finite_size   
-  2. Run EasyStartDMRG directly
+  2. Run EasyStartDMRG directly    
     >>> import EasyStart_DMRG    
     >>> EasyStart_DMRG    
-*The aim of EasyStartDMRG is to let everyone be able to use DMRG to simulate the ground state of any quantum models. One can run 'EasyStartDMRG' to start. 
-### To use EasyStartDMRG, you only need to know three things: 
-    1.What you are simulating (e.g., Heisenber model, entanglement, ect.) 
-    2.How to run a Python code 
-    3.English 
-    * It is ok if you may not know how DMRG works 
-### Steps to use EasyStartDMRG: 
+*The aim of EasyStartDMRG is to let everyone be able to use DMRG to simulate the ground state of any quantum models. One can run 'EasyStartDMRG' to start.   
+### To use EasyStartDMRG, you only need to know three things:   
+    1.What you are simulating (e.g., Heisenber model, entanglement, ect.)    
+    2.How to run a Python code   
+    3.English   
+    * It is ok if you may not know how DMRG works   
+### Steps to use EasyStartDMRG:   
     1.Run 'EasyStart_DMRG'   
     2.Input the parameters by following the instructions 
     3.Choose the quantities you are interested in 
