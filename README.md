@@ -34,8 +34,8 @@ Tensor Netwok Algorithms for EVERYONE
   3. LTRG [3] for the thermodynamics of infinite spin chains
   4. Simple update [4] for the ground states of infinite 2D spin models
   5. ODTNS [5] for the thermodynamics of infinite 2D spin models
-  6. AOP [6] for the ground states of 1D, 2D, 3D infinite models
-  7. AOP [7] for the thermodynamics of 1D, 2D, 3D infinite models
+  6. AOP [6, 7] for the ground states of 1D, 2D, 3D infinite models
+  7. AOP [8] for the thermodynamics of 1D, 2D, 3D infinite models
 ## References
  [0] Our TN review: Shi-Ju Ran, Emanuele Tirrito, Cheng Peng, Xi Chen, Gang Su, Maciej Lewenstein. Review of Tensor Network Contraction Approaches, arXiv:1708.09213.   
  [1] iDMRG: Steven R. White. Density matrix formulation for quantum renormalization groups. Phys. Rev. Lett. 69, 2863 (1992).  
@@ -45,3 +45,4 @@ Tensor Netwok Algorithms for EVERYONE
  [5] ODTNS: Shi-Ju Ran, Wei Li, Bin Xi, Zhe Zhang, and Gang Su. Optimized decimation of tensor networks with super-orthogonalization for two-dimensional quantum lattice models. Phys. Rev. B 86, 134429 (2012).  
  [6] AOP (1D): Shi-Ju Ran. Ab initio optimization principle for the ground states of translationally invariant strongly-correlated quantum lattice models. Phys. Rev. E 93, 053310 (2016).  
  [7] AOP (2D and 3D): Shi-Ju Ran, Angelo Piga, Cheng Peng, Gang Su, and Maciej Lewenstein. Few-body systems capture many-body physics: Tensor network approach. Phys. Rev. B 96, 155120 (2017).
+ [8] Shi-JU Ran et al. in preparation.
