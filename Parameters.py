@@ -155,7 +155,7 @@ def parameter_dmrg_square():
 
 
 # =================================================================
-# Some function used here
+# Some function used here that need not be modified
 def from_index2_to_positions_h2(index2):
     from DMRG_anyH import sort_positions
     pos_h2 = index2[:, :2]
