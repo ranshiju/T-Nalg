@@ -174,6 +174,25 @@ def arg_find_array(arg, n=1, which='first'):
 # =========================================
 # Print or Check functions
 def trace_stack(level0=2):
+    """
+    Print the line and file name where this function is used
+    :param level0:  previous level0 level in files
+    :return: previous level0 line and file name
+    Example
+        >>>fileA.py
+        >>> def fucntion1():
+        >>>    print(trace_stack(2))
+        >>>fileB.py
+        >>> import fileA
+        >>> def function2():
+        >>>    fileA.function1()
+        >>>fileC.py
+        >>> import fileB
+        >>> def function3():
+        >>>    fileB.function2()
+        >>>function3()
+          in file_path\fileC.py at line 2
+    """
     # print the line and file name where this function is used
     info = inspect.stack()
     ns = info.__len__()
@@ -182,6 +201,22 @@ def trace_stack(level0=2):
 
 
 def print_dict(a, keys=None, welcome='', style_sep=': ', color='white', end='\n'):
+    """
+    Print dictionary
+    :param a: dictionary
+    :param keys: names in dictionary
+    :param welcome:  front words of dictionary
+    :param style_sep:  separator
+    :param color: print in what color
+    :param end: how to end each line
+    :return: what need to be print
+    Example:
+        >>>A = {'name1': 1, 'name2': 'a'}
+        >>>print_dict(A, 'this is an example', '-')
+          this is an example
+          name1-1
+          name2-2
+    """
     express = welcome
     if keys is None:
         for n in a:
@@ -199,12 +234,30 @@ def print_dict(a, keys=None, welcome='', style_sep=': ', color='white', end='\n'
 
 
 def print_error(string, if_trace_stack=True):
+    """
+    Print an error
+    :param string: error information
+    :param if_trace_stack: if need to print file name and line
+    Example:
+        >>>print_error('error: this is an example', 0)
+          error: this is an example
+    """
     cprint(string, 'magenta')
     if if_trace_stack:
         trace_stack(3)
 
 
 def print_sep(info='', style='=', length=40, color='cyan'):
+    """
+    Print a separator
+    :param info:  information
+    :param style:  separator type
+    :param length:  total length
+    :param color:  color
+    Example:
+        >>>print_sep('This is an example', '@', '20')
+          @@@@@@@@@@ This is an example @@@@@@@@@@
+    """
     if info == '':
         cprint(style * (length * 2), color)
     else:
@@ -218,6 +271,19 @@ def print_sep(info='', style='=', length=40, color='cyan'):
 
 
 def print_options(options, start=1, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
+    """
+    Print the options
+    :param options: possible options
+    :param start: options count start with
+    :param welcome: explaining of options
+    :param style_sep:  separator between counts and options
+    :param end: end
+    :param color: color
+    Example:
+        >>>a = ['left', 'right']
+        >>>print_options(a, 1, 'Where to go:')
+          Where to go:1: left    2: right
+    """
     message = welcome
     length = len(options)
     for i in range(0, length):
