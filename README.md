@@ -37,11 +37,11 @@ Tensor Netwok Algorithms for EVERYONE
   6. AOP [6] for the ground states of 1D, 2D, 3D infinite models
   7. AOP [7] for the thermodynamics of 1D, 2D, 3D infinite models
 ## References
- [0] Our TN review: Shi-Ju Ran, Emanuele Tirrito, Cheng Peng, Xi Chen, Gang Su, Maciej Lewenstein. Review of Tensor Network Contraction Approaches, arXiv:1708.09213.
- [1] iDMRG: Steven R. White. Density matrix formulation for quantum renormalization groups. Phys. Rev. Lett. 69, 2863 (1992).
- [2] iTEBD: Guifre Vidal. Classical Simulation of Infinite-Size Quantum Lattice Systems in One Spatial Dimension. Phys. Rev. Lett. 98, 070201 (2007).
- [3] LTRG: Wei Li, Shi-Ju Ran, Shou-Shu Gong, Yang Zhao, Bin Xi, Fei Ye, and Gang Su. Linearized tensor renormalization group algorithm for the calculation of thermodynamic properties of quantum lattice models. Phys. Rev. Lett. 106, 127202 (2011).
- [4] Simple update: Hong-Chen Jiang, Zheng-Yu Weng, and Tao Xiang. Accurate determination of tensor network state of quantum lattice models in two dimensions. Phys. Rev. Lett. 101, 090603 (2008).
- [5] ODTNS: Shi-Ju Ran, Wei Li, Bin Xi, Zhe Zhang, and Gang Su. Optimized decimation of tensor networks with super-orthogonalization for two-dimensional quantum lattice models. Phys. Rev. B 86, 134429 (2012).
- [6] AOP (1D): Shi-Ju Ran. Ab initio optimization principle for the ground states of translationally invariant strongly-correlated quantum lattice models. Phys. Rev. E 93, 053310 (2016).
+ [0] Our TN review: Shi-Ju Ran, Emanuele Tirrito, Cheng Peng, Xi Chen, Gang Su, Maciej Lewenstein. Review of Tensor Network Contraction Approaches, arXiv:1708.09213.   
+ [1] iDMRG: Steven R. White. Density matrix formulation for quantum renormalization groups. Phys. Rev. Lett. 69, 2863 (1992).  
+ [2] iTEBD: Guifre Vidal. Classical Simulation of Infinite-Size Quantum Lattice Systems in One Spatial Dimension. Phys. Rev. Lett. 98, 070201 (2007).   
+ [3] LTRG: Wei Li, Shi-Ju Ran, Shou-Shu Gong, Yang Zhao, Bin Xi, Fei Ye, and Gang Su. Linearized tensor renormalization group algorithm for the calculation of thermodynamic properties of quantum lattice models. Phys. Rev. Lett. 106, 127202 (2011). 
+ [4] Simple update: Hong-Chen Jiang, Zheng-Yu Weng, and Tao Xiang. Accurate determination of tensor network state of quantum lattice models in two dimensions. Phys. Rev. Lett. 101, 090603 (2008). 
+ [5] ODTNS: Shi-Ju Ran, Wei Li, Bin Xi, Zhe Zhang, and Gang Su. Optimized decimation of tensor networks with super-orthogonalization for two-dimensional quantum lattice models. Phys. Rev. B 86, 134429 (2012).  
+ [6] AOP (1D): Shi-Ju Ran. Ab initio optimization principle for the ground states of translationally invariant strongly-correlated quantum lattice models. Phys. Rev. E 93, 053310 (2016).  
  [7] AOP (2D and 3D): Shi-Ju Ran, Angelo Piga, Cheng Peng, Gang Su, and Maciej Lewenstein. Few-body systems capture many-body physics: Tensor network approach. Phys. Rev. B 96, 155120 (2017).
