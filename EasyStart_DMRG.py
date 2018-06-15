@@ -2,12 +2,13 @@ import numpy as np
 import os.path as o_path
 import matplotlib.pyplot as mp
 from termcolor import cprint, colored
+import Hamiltonian_Module as hm
 from Basic_Functions_SJR import input_and_check_type, input_and_check_value, \
     save_pr, load_pr, print_options, print_sep, plot_square_lattice, input_and_check_type_multiple_items, \
     plot_connections_polar
 from DMRG_anyH import dmrg_finite_size, sort_positions, positions_set2array
 
-is_from_input = False
+is_from_input = True
 is_load_data = True
 
 
@@ -62,7 +63,7 @@ if is_from_input:
     para['hz'] = input_and_check_type((int, float), 'hz')
 
     print_options(('chain', 'square', 'arbitrary'), welcome='For the lattice, please chose: ')
-    tmp = input_and_check_value([1, 2, 3], ('chain', 'square', 'arbitrary'), 'lattice', 'para')
+    tmp = input_and_check_value([1, 2, 3], ('chain', 'square', 'arbitrary'), 'lattice', 'para', start_ind=1)
     para['lattice'] = ['chain', 'square', 'arbitrary'][tmp-1]
     if para['lattice'] == 'chain':
         print('For the length of the chain')
@@ -96,7 +97,7 @@ if is_from_input:
         para['bound_cond'] = ''
     if para['lattice'] != 'arbitrary':
         print_options(('open BC', 'periodic BC'), welcome='For the boundary condition (BC), please chose: ')
-        tmp = input_and_check_value([1, 2], ('open', 'periodic'), 'bound_cond', 'para')
+        tmp = input_and_check_value([1, 2], ('open', 'periodic'), 'bound_cond', 'para', start_ind=1)
         para['bound_cond'] = (('open', 'periodic')[tmp-1])
     print('For the dimension cut-off (if you are not sure what to input, input -1)')
     para['chi'] = input_and_check_type(int, 'chi')
@@ -109,6 +110,8 @@ if is_from_input:
 
     print('Other parameters are set as default ...')
     para['spin'] = 'half'
+    op = hm.spin_operators(para['spin'])
+    para['op'] = [op['id'], op['sx'], op['sy'], op['sz'], op['su'], op['sd']]
     para['d'] = 2  # Physical bond dimension
     para['sweep_time'] = 500  # sweep time
     # Fixed parameters
@@ -120,14 +123,24 @@ if is_from_input:
     para['dt_ob'] = 5  # in how many sweeps, observe to check the convergence
     para['ob_position'] = (para['l']/2).__int__()  # to check the convergence, chose a position to observe
     para['data_path'] = '.\\data_dmrg\\'
-    para['data_exp'] = 'N%d_j(%g,%g)_h(%g,%g)_chi%d' % \
-                       (para['l'], para['jxy'], para['jz'], para['hx'],
-                        para['hz'], para['chi']) + para['bound_cond']
-    if para['lattice'] == 'square':
-        para['data_exp'] = para['lattice'] + '(%d,%d)' % \
-                           (para['square_width'], para['square_height']) + para['data_exp']
-    else:
-        para['data_exp'] = para['lattice'] + para['data_exp']
+    if para['lattice'] is 'square':
+        para['positions_h2'] = hm.positions_nearest_neighbor_square(
+            para['square_width'], para['square_height'], para['bound_cond'])
+        para['data_exp'] = 'square' + '(%d,%d)' % (para['square_width'], para['square_height']) + \
+                           'N%d_j(%g,%g)_h(%g,%g)_chi%d' % (para['l'], para['jxy'], para['jz'], para['hx'],
+                                                            para['hz'], para['chi']) + para['bound_cond']
+    elif para['lattice'] is 'chain':
+        para['positions_h2'] = hm.positions_nearest_neighbor_1d(para['l'], para['bound_cond'])
+        para['data_exp'] = 'chainN%d_j(%g,%g)_h(%g,%g)_chi%d' % \
+                           (para['l'], para['jxy'], para['jz'], para['hx'],
+                            para['hz'], para['chi']) + para['bound_cond']
+    elif para['lattice'] is 'arbitrary':
+        para['data_exp'] = 'arbitraryN%d_j(%g,%g)_h(%g,%g)_chi%d' % \
+                           (para['l'], para['jxy'], para['jz'], para['hx'],
+                            para['hz'], para['chi']) + para['bound_cond']
+    para['index1'] = np.mat(np.arange(0, para['l']))
+    para['index1'] = np.vstack((para['index1'], 6 * np.ones((1, para['l'])))).T.astype(int)
+    para['index2'] = hm.interactions_position2full_index_heisenberg_two_body(para['positions_h2'])
 else:
     from Parameters import generate_parameters_dmrg
     para = generate_parameters_dmrg()
@@ -155,7 +168,7 @@ if is_from_input:
         print('Which property are you interested in (' + colored('to exit, input 0', 'cyan') + '):')
         options = ('bond energies', 'magnetization', 'entanglement entropy')
         print_options(options)
-        x = input_and_check_value(np.vstack(((np.arange(1, len(options)+1)).reshape(-1, 1), 0)).T)
+        x = input_and_check_value(np.vstack(((np.arange(1, len(options)+1)).reshape(-1, 1), 0)).T, start_ind=1)
         if x == 0:
             end_plot = True
         elif x == 1:  # plot bond energies

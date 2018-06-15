@@ -179,15 +179,15 @@ def trace_stack(level0=2):
     :param level0:  previous level0 level in files
     :return: previous level0 line and file name
     Example
-        >>>fileA.py
+        in fileA.py
         >>> def fucntion1():
         >>>    print(trace_stack(2))
-        >>>fileB.py
-        >>> import fileA
+        in fileB.py
+        if import fileA
         >>> def function2():
         >>>    fileA.function1()
-        >>>fileC.py
-        >>> import fileB
+        in fileC.py
+        if import fileB
         >>> def function3():
         >>>    fileB.function2()
         >>>function3()
@@ -302,17 +302,12 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
     some_error = True
     while some_error:
         try:
-            input_bad = True
-            while input_bad:
-                value = input('Please input the value of ' + name + ': ')
-                if value.__len__() > 0:
-                    value = eval(value)
-                    input_bad = False
             while not ok:
+                value = eval(input('Please input the value of ' + name + ': '))
                 if isinstance(value, right_type):
                     ok = True
                 else:
-                    value = eval(input(name + ' should be ' + str(right_type) + ', please input again: '))
+                    print(name + ' should be ' + str(right_type) + ', please input again.')
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
@@ -321,33 +316,48 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
     return value
 
 
-def input_and_check_value(right_value, values_str=(), names='', dict_name='', start_ind=-1):
+# def input_and_check_value(right_value, values_str=(), names='', dict_name='', start_ind=-1):
+#     # right_value should be an array
+#     ok = False
+#     some_error = True
+#     while some_error:
+#         try:
+#             while not ok:
+#                 value = eval(input('Please input your choice: '))
+#                 if value in right_value:
+#                     ok = True
+#                 else:
+#                     value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
+#                                        + ', please input again: '))
+#             some_error = False
+#         except (NameError, ValueError, SyntaxError):
+#             cprint('The input is illegal, please input again ...', 'magenta')
+#     if start_ind < 0:
+#         start_ind = right_value[0]
+#         print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
+#                                         str(values_str[value - start_ind]) + '\'', 'cyan'))
+#     return value
+
+def input_and_check_value(right_value, values_str, names='', dict_name='', start_ind=-1):
     # right_value should be an array
     ok = False
     some_error = True
+    right_value = set(right_value)
     while some_error:
         try:
-            input_bad = True
-            while input_bad:
-                value = input('Please input your choice: ')
-                if value.__len__() > 0:
-                    value = eval(value)
-                    input_bad = False
-            right_value = np.array(right_value)
             while not ok:
-                if np.any(value == right_value):
+                value = eval(input('Please input your choice: '))
+                if value in right_value:
                     ok = True
                 else:
-                    value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
-                                       + ', please input again: '))
+                    print('Input should be ' + colored(str(right_value), 'cyan') + ', please input again: ')
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
-    if values_str.__len__() > 0:
-        if start_ind < 0:
-            start_ind = right_value[0]
-        print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
-                                        str(values_str[value - start_ind]) + '\'', 'cyan'))
+    if start_ind < 0:
+        start_ind = 0
+    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
+                                    str(values_str[value - start_ind]) + '\'', 'cyan'))
     return value
 
 
@@ -386,7 +396,7 @@ def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms
         elif new == key_clear:
             output.clear()
             cprint('You have cleared all the inputs.', 'cyan')
-        elif not check_condition(new, cond):
+        elif (cond is not None) and (not check_condition(new, cond)):
             cprint('The input is invalid since it does not satisfy the condition', 'magenta')
         elif not isinstance(new, right_type0):
             if is_print:
