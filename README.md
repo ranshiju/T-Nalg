@@ -1,6 +1,6 @@
 # T-Nalg
-Tensor Netwok Algorithms for EVERYONE
-*If our code helps your project, please cite our tensor network review paper: S. J. Ran, arXiv.1708.09213 (https://arxiv.org/abs/1708.09213)
+Tensor Netwok Algorithms for EVERYONE   
+*If our code helps your project, please cite our tensor network review paper: S. J. Ran, arXiv.1708.09213 (https://arxiv.org/abs/1708.09213)   
 * Before using, you need to install numpy, scipy, and matplotlib in your python
 
 ## DMRG for any finite-size lattices
