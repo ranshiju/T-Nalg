@@ -35,7 +35,7 @@ class MpsOpenBoundaryClass:
         cost, and an operator is defined to put in eigs function. Recommend to use the first with relatively a large
         number of interaction terms, and use the second with a relatively large bond dimension cut-off
     """
-    def __init__(self, length, d, chi, spin='half', way='qr', ini_way='r', debug=False,
+    def __init__(self, length, d, chi, spin='half', way='qr', ini_way='r', operators=None, debug=False,
                  is_parallel=False, is_save_op=False, eig_way=0, par_pool=None):
         self.version = '2018-06-2'
         self.spin = spin
@@ -54,8 +54,12 @@ class MpsOpenBoundaryClass:
         self.virtual_dim = np.ones((length + 1,)).astype(int) * chi
         self.virtual_dim[0] = 1
         self.virtual_dim[-1] = 1
-        op_half = spin_operators(spin)
-        self.operators = [op_half['id'], op_half['sx'], op_half['sy'], op_half['sz'], op_half['su'], op_half['sd']]
+        if operators is None:
+            op_half = spin_operators(spin)
+            self.operators = [op_half['id'], op_half['sx'], op_half['sy'], op_half['sz'], op_half['su'],
+                              op_half['sd']]
+        else:
+            self.operators = operators
 
         self._is_save_op = is_save_op  # whether saving all effective operators to accelerate the code
         self.effect_s = {'none': np.zeros(0)}

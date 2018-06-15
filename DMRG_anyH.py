@@ -1,7 +1,8 @@
 from multiprocessing.dummy import Pool as ThreadPool
 from MPS_Class import MpsOpenBoundaryClass as Mob
-from Parameters import parameter_dmrg
-import Hamiltonian_Module as Hm
+from Basic_Functions_SJR import arg_find_array
+from Tensor_Basic_Module import sort_vectors
+import Parameters as pm
 import numpy as np
 import time
 
@@ -11,56 +12,20 @@ n_nodes = 4
 is_save_op = True
 
 
-def get_bond_energies(eb_full, positions, index2):
-    nl = positions.shape[0]
-    nh = eb_full.size
-    eb = np.zeros((nl, 1))
-    for i in range(0, nh):
-        p = (index2[i, 0] == positions[:, 0]) * (index2[i, 1] == positions[:, 1])
-        p = np.nonzero(p)
-        eb[p] += eb_full[i]
-    return eb
-
-
 def dmrg_finite_size(para=None):
     t_start = time.time()
     info = dict()
     print('Preparation the parameters and MPS')
     if para is None:
-        para = parameter_dmrg()
-    # obtain spin operators
-    # define interaction index
-    # index1[n, 1]-th operator is at the index[n, 0]-th site
-    index1 = np.mat(np.arange(0, para['l']))
-    index1 = np.vstack((index1, 6 * np.ones((1, para['l'])))).T.astype(int)
-
-    # index2[n, 2]-th operator is at the index[n, 0]-th site
-    # index2[n, 3]-th operator is at the index[n, 1]-th site
-    if para['lattice'] == 'chain':
-        para['positions_h2'] = Hm.positions_nearest_neighbor_1d(para['l'], para['bound_cond'])
-    elif para['lattice'] == 'square':
-        para['positions_h2'] = Hm.positions_nearest_neighbor_square(
-            para['square_width'], para['square_height'], para['bound_cond'])
-    index2 = Hm.interactions_position2full_index_heisenberg_two_body(para['positions_h2'])
-    para['nh'] = index2.shape[0]  # number of two-body interactions
+        para = pm.generate_parameters_dmrg()
     # Initialize MPS
     if is_parallel:
         par_pool = ThreadPool(n_nodes)
     else:
         par_pool = None
-    A = Mob(length=para['l'], d=para['d'], chi=para['chi'], way='qr', ini_way='r', debug=is_debug,
-            is_parallel=is_parallel, par_pool=par_pool, is_save_op=is_save_op)
-    # define the coefficients for one-body terms
-    op_half = Hm.spin_operators(para['spin'])
-    A.append_operators([-para['hx']*op_half['sx'] - para['hz']*op_half['sz']])  # the 6th operator for magnetic fields
-    coeff1 = np.ones((index1.shape[0], 1))
-    coeff2 = np.ones((index2.shape[0], 1))
-    for i in range(0, index2.shape[0]):
-        if (i % 3) == 0:
-            coeff2[i, 0] = para['jxy'] / 2
-            coeff2[i + 1, 0] = para['jxy'] / 2
-            coeff2[i + 2, 0] = para['jz']
 
+    A = Mob(length=para['l'], d=para['d'], chi=para['chi'], way='qr', ini_way='r', operators=para['op'],
+            debug=is_debug, is_parallel=is_parallel, par_pool=par_pool, is_save_op=is_save_op)
     A.correct_orthogonal_center(para['ob_position'])
     print('Starting to sweep ...')
     e0_total = 0
@@ -73,24 +38,34 @@ def dmrg_finite_size(para=None):
         for n in range(para['ob_position']+1, para['l']):
             if para['if_print_detail']:
                 print('update the %d-th tensor from left to right...' % n)
-            A.update_tensor_eigs(n, index1, index2, coeff1, coeff2, para['tau'], para['is_real'],
-                                 tol=para['eigs_tol'])
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
+                                 para['is_real'], tol=para['eigs_tol'])
         for n in range(para['l']-2, -1, -1):
             if para['if_print_detail']:
                 print('update the %d-th tensor from right to left...' % n)
-            A.update_tensor_eigs(n, index1, index2, coeff1, coeff2, para['tau'], para['is_real'],
-                                 tol=para['eigs_tol'])
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
+                                 para['is_real'], tol=para['eigs_tol'])
         for n in range(1, para['ob_position']):
             if para['if_print_detail']:
                 print('update the %d-th tensor from left to right...' % n)
-            A.update_tensor_eigs(n, index1, index2, coeff1, coeff2, para['tau'], para['is_real'],
-                                 tol=para['eigs_tol'])
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
+                                 para['is_real'], tol=para['eigs_tol'])
 
         if if_ob:
-            ob['eb_full'] = A.observe_bond_energy(index2, coeff2)
+            ob['eb_full'] = A.observe_bond_energy(para['index2'], para['coeff2'])
             ob['mx'] = A.observe_magnetization(1)
             ob['mz'] = A.observe_magnetization(3)
-            ob['e_per_site'] = (sum(ob['eb_full']) - para['hx']*sum(ob['mx']) - para['hz']*sum(ob['mz']))/A.length
+            if para['lattice'] in ('square', 'chain'):
+                ob['e_per_site'] = (sum(ob['eb_full']) - para['hx']*sum(ob['mx']) - para['hz']*
+                                    sum(ob['mz']))/A.length
+            else:
+                ob['e_per_site'] = sum(ob['eb_full'])
+                for n in range(0, para['coeff1'].shape[0]):
+                    if para['index1'][n, 1] == 1:
+                        ob['e_per_site'] += para['coeff1'][n]*ob['mx'][n]
+                    elif para['index1'][n, 1] == 3:
+                        ob['e_per_site'] += para['coeff1'][n] * ob['mz'][n]
+                ob['e_per_site'] /= A.length
             info['convergence'] = abs(ob['e_per_site'] - e0_total)
             if info['convergence'] < para['break_tol']:
                 print('Converged at the %d-th sweep with error = %g of energy per site.' % (t, info['convergence']))
@@ -101,7 +76,7 @@ def dmrg_finite_size(para=None):
         if t == para['sweep_time'] - 1 and info['convergence'] > para['break_tol']:
             print('Not converged with error = %g of eb per bond' % info['convergence'])
             print('Consider to increase para[\'sweep_time\']')
-    ob['eb'] = get_bond_energies(ob['eb_full'], para['positions_h2'], index2)
+    ob['eb'] = get_bond_energies(ob['eb_full'], para['positions_h2'], para['index2'])
     A.calculate_entanglement_spectrum()
     A.calculate_entanglement_entropy()
     info['t_cost'] = time.time() - t_start
@@ -121,3 +96,48 @@ def dmrg_finite_size(para=None):
     if A._is_parallel:
         par_pool.close()
     return ob, A, info, para
+
+
+# ======================================================
+def positions_set2array(pos_set):
+    nh = pos_set.__len__()
+    pos_set = list(pos_set)
+    pos = np.zeros((nh, 2))
+    for n in range(0, nh):
+        pos[n, :] = np.array(pos_set[n])
+    pos = pos.astype(int)
+    pos -= np.min(pos)
+    p_max = np.max(pos)
+    for i in range(p_max-1, 0, -1):
+        number = np.nonzero(pos == i)[0].size
+        if number == 0:
+            pos -= (pos > i)
+    return pos
+
+
+def sort_positions(pos, which='ascend'):
+    # pos must be formed by int
+    order = np.argsort(pos[:, 0])
+    if which is 'descend':
+        order = order[::-1]
+    pos = sort_vectors(pos, order, 'row').astype(int)
+    l_now = 0
+    for n in range(min(pos[:, 0]), max(pos[:, 0])+1):
+        ln = arg_find_array(pos[:, 0] == n, 1, 'last')
+        if ln.size > 0:
+            _tmp = pos[l_now:ln+1, 1:]
+            order = np.argsort(_tmp[:, 0])
+            pos[l_now:ln+1, 1:] = sort_vectors(_tmp, order, 'row')
+            l_now = ln+1
+    return pos
+
+
+def get_bond_energies(eb_full, positions, index2):
+    nl = positions.shape[0]
+    nh = eb_full.size
+    eb = np.zeros((nl, 1))
+    for i in range(0, nh):
+        p = (index2[i, 0] == positions[:, 0]) * (index2[i, 1] == positions[:, 1])
+        p = np.nonzero(p)
+        eb[p] += eb_full[i]
+    return eb
