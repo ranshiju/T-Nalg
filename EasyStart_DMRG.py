@@ -1,5 +1,5 @@
 import numpy as np
-import os.path as opath
+import os.path as o_path
 import matplotlib.pyplot as mp
 from termcolor import cprint, colored
 from Parameters import parameter_dmrg
@@ -9,8 +9,8 @@ from Basic_Functions_SJR import input_and_check_type, input_and_check_value, \
 from Tensor_Basic_Module import sort_vectors
 from DMRG_anyH import dmrg_finite_size
 
-is_from_input = False
-is_load_data = False
+is_from_input = True
+is_load_data = True
 
 
 def print_info_to_be_added(model, method):
@@ -160,15 +160,14 @@ save_pr('.\\para_dmrg\\', '_para.pr', (para,), ('para',))
 print('The parameter have been saved as ' + colored('.\\para_dmrg\_para.pr', 'green'))
 
 print_sep('Start DMRG simulation')
-if is_load_data and opath.isfile(data_full_name) and (para['lattice'] is not 'arbitrary'):
+if is_load_data and o_path.isfile(data_full_name) and (para['lattice'] is not 'arbitrary'):
     print('The data exists in ' + para['data_path'].rstrip("\\") + '. Load directly...')
     ob, A = load_pr(data_full_name, ('ob', 'A'))
-elif (not is_load_data) or (not opath.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
+elif (not is_load_data) or (not o_path.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
     ob, A, info, para = dmrg_finite_size(para)
-if (not opath.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
+if (not o_path.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
     if A._is_parallel:
         A.pool.close()
-        A.pool.join()
     save_pr(para['data_path'], para['data_exp'] + '.pr', (ob, A, info, para), ('ob', 'A', 'info', 'para'))
     print('The data have been saved in ' + colored(para['data_path'].rstrip("\\"), 'green'))
 

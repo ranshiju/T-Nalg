@@ -1,3 +1,4 @@
+from multiprocessing.dummy import Pool as ThreadPool
 from MPS_Class import MpsOpenBoundaryClass as Mob
 from Parameters import parameter_dmrg
 import Hamiltonian_Module as Hm
@@ -6,7 +7,8 @@ import time
 
 is_debug = False
 is_parallel = False
-is_save_op = False
+n_nodes = 4
+is_save_op = True
 
 
 def get_bond_energies(eb_full, positions, index2):
@@ -42,8 +44,12 @@ def dmrg_finite_size(para=None):
     index2 = Hm.interactions_position2full_index_heisenberg_two_body(para['positions_h2'])
     para['nh'] = index2.shape[0]  # number of two-body interactions
     # Initialize MPS
+    if is_parallel:
+        par_pool = ThreadPool(n_nodes)
+    else:
+        par_pool = None
     A = Mob(length=para['l'], d=para['d'], chi=para['chi'], way='qr', ini_way='r', debug=is_debug,
-            is_parallel=is_parallel, is_save_op=is_save_op)
+            is_parallel=is_parallel, par_pool=par_pool, is_save_op=is_save_op)
     # define the coefficients for one-body terms
     op_half = Hm.spin_operators(para['spin'])
     A.append_operators([-para['hx']*op_half['sx'] - para['hz']*op_half['sz']])  # the 6th operator for magnetic fields
@@ -112,4 +118,6 @@ def dmrg_finite_size(para=None):
     # print(A.effect_s.keys())
     # print('The length of effective_s: %d' % len(A.effect_s))
     A.clean_to_save()
+    if A._is_parallel:
+        par_pool.close()
     return ob, A, info, para

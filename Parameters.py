@@ -9,8 +9,8 @@ def parameter_dmrg():
     para['hz'] = 0
     para['bound_cond'] = 'open'
     # Calculation parameters
-    para['l'] = 14  # Length of MPS
-    para['chi'] = 32  # Virtual bond dimension cut-off
+    para['l'] = 12  # Length of MPS
+    para['chi'] = 16  # Virtual bond dimension cut-off
     para['d'] = 2  # Physical bond dimension
     para['sweep_time'] = 200  # sweep time
     # Fixed parameters
