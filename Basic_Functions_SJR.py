@@ -324,6 +324,21 @@ def print_options(options, start=1, welcome='', style_sep=': ', end='    ', colo
 
 
 def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
+    """
+    Input and check input type
+    :param right_type: allowed types for input
+    :param name: name of input
+    :param print_result: if print out the input
+    :param dict_name: dictionary of input belongs to
+    :return: input
+    Example:
+        >>>input_and_check_type(int, 'number',True, 'input')
+          Please input the value of number:
+        >>> a
+          number should be int, please input again:
+        >>> 2
+          You have set input 'number' = 2
+    """
     # right_type should be a tuple
     ok = False
     some_error = True
@@ -366,6 +381,20 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
 #     return value
 
 def input_and_check_value(right_value, values_str, names='', dict_name='', start_ind=-1):
+    """
+    Input and check the value of input
+    :param right_value:  allowed values of input
+    :param values_str: describe of input
+    :param names:  name of input
+    :param dict_name: dictionary name of input
+    :param start_ind: start with 1
+    :return: input
+    Example:
+        >>>input_and_check_value([1, 2, 3], ('one', 'two', 'three'), names='Example', dict_name='Only an')
+          Please input your choice:
+        >>> 2
+          You have set Only an['Example'] = 'two'
+    """
     # right_value should be an array
     ok = False
     some_error = True
@@ -389,6 +418,16 @@ def input_and_check_value(right_value, values_str, names='', dict_name='', start
 
 
 def check_condition(x, cond):
+    """
+    check if x satisfied condition
+    :param x: a variable
+    :param cond: a function that return boolean variable
+    :return: true or false
+    Example:
+        >>>y = check_condition(3, lambda x: x > 0)
+        >>> print(y)
+          True
+    """
     from inspect import isfunction
     if not isfunction(cond):
         return False
@@ -401,6 +440,31 @@ def check_condition(x, cond):
 
 def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms', max_len=100,
                                         key_stop=-1, key_clear=-3, is_print=False):
+    """
+    Input multiple items and check type
+    :param right_type0:  allowed input type
+    :param cond:  condition of input
+    :param name:  name of input
+    :param max_len:  maximal number inputs
+    :param key_stop:  keyword to end inputs
+    :param key_clear:  keyword to clean all inputs
+    :param is_print:  if print your inputs
+    :return:  all inputs
+    Example:
+        >>>y = input_and_check_type_multiple_items(int, lambda x: x > 0, 'int',key_stop='stop', key_clear='clean')
+          Please input the value of int:
+        >>> 2
+          Please input the value of int:
+        >>> -1
+          The input is invalid since it does not satisfy the condition
+          Please input the value of int:
+        >>> 3
+          Please input the value of int:
+        >>>'stop'
+          You input the key to stop. Input completed.
+        >>> print(y)
+          {2, 3}
+    """
     # cond(inout) is True or False, a function to judge if the input is satisfactory
     if is_print:
         cprint('To finish inputting, input -1', 'cyan')
