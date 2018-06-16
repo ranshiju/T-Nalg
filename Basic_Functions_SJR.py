@@ -130,6 +130,10 @@ def empty_list(n, content=None):
     return [content for _ in range(0, n)]
 
 
+def remove_element_from_list(x, element):
+    return list(filter(lambda a: a != element, x))
+
+
 def arg_find_array(arg, n=1, which='first'):
     """
     Find the position of positions of elements required
@@ -171,6 +175,29 @@ def arg_find_array(arg, n=1, which='first'):
     return y
 
 
+def arg_find_list(x, target, n=1, which='first'):
+    # x should be a list or tuple (of course '1D')
+    # for array or ndarray, please use arg_find_array
+    n_found = 0
+    n_start = 0
+    ind = list()
+    if which is 'last':
+        x = x[::-1]
+    for i in range(0, n):
+        try:
+            new_ind = x.index(target, n_start)
+        except ValueError:
+            pass
+        else:
+            ind.append(new_ind)
+            n_found += 1
+            n_start = new_ind+1
+    if which is 'last':
+        length = x.__len__()
+        ind = [length - tmp - 1 for tmp in ind]
+    return ind
+
+
 # =========================================
 # Print or Check functions
 def trace_stack(level0=2):
@@ -179,15 +206,15 @@ def trace_stack(level0=2):
     :param level0:  previous level0 level in files
     :return: previous level0 line and file name
     Example
-        >>>fileA.py
+        in fileA.py
         >>> def fucntion1():
         >>>    print(trace_stack(2))
-        >>>fileB.py
-        >>> import fileA
+        in fileB.py
+        if import fileA
         >>> def function2():
         >>>    fileA.function1()
-        >>>fileC.py
-        >>> import fileB
+        in fileC.py
+        if import fileB
         >>> def function3():
         >>>    fileB.function2()
         >>>function3()
@@ -297,22 +324,32 @@ def print_options(options, start=1, welcome='', style_sep=': ', end='    ', colo
 
 
 def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
+    """
+    Input and check input type
+    :param right_type: allowed types for input
+    :param name: name of input
+    :param print_result: if print out the input
+    :param dict_name: dictionary of input belongs to
+    :return: input
+    Example:
+        >>>input_and_check_type(int, 'number',True, 'input')
+          Please input the value of number:
+        >>> a
+          number should be int, please input again:
+        >>> 2
+          You have set input 'number' = 2
+    """
     # right_type should be a tuple
     ok = False
     some_error = True
     while some_error:
         try:
-            input_bad = True
-            while input_bad:
-                value = input('Please input the value of ' + name + ': ')
-                if value.__len__() > 0:
-                    value = eval(value)
-                    input_bad = False
             while not ok:
+                value = eval(input('Please input the value of ' + name + ': '))
                 if isinstance(value, right_type):
                     ok = True
                 else:
-                    value = eval(input(name + ' should be ' + str(right_type) + ', please input again: '))
+                    print(name + ' should be ' + str(right_type) + ', please input again.')
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
@@ -321,37 +358,76 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
     return value
 
 
-def input_and_check_value(right_value, values_str=(), names='', dict_name='', start_ind=-1):
+# def input_and_check_value(right_value, values_str=(), names='', dict_name='', start_ind=-1):
+#     # right_value should be an array
+#     ok = False
+#     some_error = True
+#     while some_error:
+#         try:
+#             while not ok:
+#                 value = eval(input('Please input your choice: '))
+#                 if value in right_value:
+#                     ok = True
+#                 else:
+#                     value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
+#                                        + ', please input again: '))
+#             some_error = False
+#         except (NameError, ValueError, SyntaxError):
+#             cprint('The input is illegal, please input again ...', 'magenta')
+#     if start_ind < 0:
+#         start_ind = right_value[0]
+#         print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
+#                                         str(values_str[value - start_ind]) + '\'', 'cyan'))
+#     return value
+
+def input_and_check_value(right_value, values_str, names='', dict_name='', start_ind=-1):
+    """
+    Input and check the value of input
+    :param right_value:  allowed values of input
+    :param values_str: describe of input
+    :param names:  name of input
+    :param dict_name: dictionary name of input
+    :param start_ind: start with 1
+    :return: input
+    Example:
+        >>>input_and_check_value([1, 2, 3], ('one', 'two', 'three'), names='Example', dict_name='Only an')
+          Please input your choice:
+        >>> 2
+          You have set Only an['Example'] = 'two'
+    """
     # right_value should be an array
     ok = False
     some_error = True
+    right_value = set(right_value)
     while some_error:
         try:
-            input_bad = True
-            while input_bad:
-                value = input('Please input your choice: ')
-                if value.__len__() > 0:
-                    value = eval(value)
-                    input_bad = False
-            right_value = np.array(right_value)
             while not ok:
-                if np.any(value == right_value):
+                value = eval(input('Please input your choice: '))
+                if value in right_value:
                     ok = True
                 else:
-                    value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
-                                       + ', please input again: '))
+                    print('Input should be ' + colored(str(right_value), 'cyan') + ', please input again: ')
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
-    if values_str.__len__() > 0:
-        if start_ind < 0:
-            start_ind = right_value[0]
-        print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
-                                        str(values_str[value - start_ind]) + '\'', 'cyan'))
+    if start_ind < 0:
+        start_ind = 0
+    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
+                                    str(values_str[value - start_ind]) + '\'', 'cyan'))
     return value
 
 
 def check_condition(x, cond):
+    """
+    check if x satisfied condition
+    :param x: a variable
+    :param cond: a function that return boolean variable
+    :return: true or false
+    Example:
+        >>>y = check_condition(3, lambda x: x > 0)
+        >>> print(y)
+          True
+    """
     from inspect import isfunction
     if not isfunction(cond):
         return False
@@ -364,6 +440,31 @@ def check_condition(x, cond):
 
 def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms', max_len=100,
                                         key_stop=-1, key_clear=-3, is_print=False):
+    """
+    Input multiple items and check type
+    :param right_type0:  allowed input type
+    :param cond:  condition of input
+    :param name:  name of input
+    :param max_len:  maximal number inputs
+    :param key_stop:  keyword to end inputs
+    :param key_clear:  keyword to clean all inputs
+    :param is_print:  if print your inputs
+    :return:  all inputs
+    Example:
+        >>>y = input_and_check_type_multiple_items(int, lambda x: x > 0, 'int',key_stop='stop', key_clear='clean')
+          Please input the value of int:
+        >>> 2
+          Please input the value of int:
+        >>> -1
+          The input is invalid since it does not satisfy the condition
+          Please input the value of int:
+        >>> 3
+          Please input the value of int:
+        >>>'stop'
+          You input the key to stop. Input completed.
+        >>> print(y)
+          {2, 3}
+    """
     # cond(inout) is True or False, a function to judge if the input is satisfactory
     if is_print:
         cprint('To finish inputting, input -1', 'cyan')
@@ -386,7 +487,7 @@ def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms
         elif new == key_clear:
             output.clear()
             cprint('You have cleared all the inputs.', 'cyan')
-        elif not check_condition(new, cond):
+        elif (cond is not None) and (not check_condition(new, cond)):
             cprint('The input is invalid since it does not satisfy the condition', 'magenta')
         elif not isinstance(new, right_type0):
             if is_print:
