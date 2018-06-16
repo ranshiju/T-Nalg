@@ -1,7 +1,7 @@
 from multiprocessing.dummy import Pool as ThreadPool
-from MPS_Class import MpsOpenBoundaryClass as Mob
-from Basic_Functions_SJR import arg_find_array
-from Tensor_Basic_Module import sort_vectors
+from MPSClass import MpsOpenBoundaryClass as Mob
+from BasicFunctionsSJR import arg_find_array
+from TensorBasicModule import sort_vectors
 import Parameters as pm
 import numpy as np
 import time
@@ -81,17 +81,6 @@ def dmrg_finite_size(para=None):
     A.calculate_entanglement_entropy()
     info['t_cost'] = time.time() - t_start
     print('Simulation finished in %g seconds' % info['t_cost'])
-    # A.report_yourself()
-    # A.check_orthogonality_by_tensors(tol=1e-14)
-    # time.sleep(0.05)
-    # print(ob['eb_full'])
-    # print(index2)
-    # print(coeff2)
-    # print(operators[4])
-    # print(operators[5])
-    # print(para['jxy'])
-    # print(A.effect_s.keys())
-    # print('The length of effective_s: %d' % len(A.effect_s))
     A.clean_to_save()
     if A._is_parallel:
         par_pool.close()

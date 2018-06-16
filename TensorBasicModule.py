@@ -1,5 +1,5 @@
 import numpy as np
-from Basic_Functions_SJR import sort_list, trace_stack, print_error, arg_find_array
+from BasicFunctionsSJR import sort_list, trace_stack, print_error, arg_find_array
 from termcolor import cprint
 is_debug = False
 if is_debug:
@@ -26,6 +26,7 @@ class CONT:
             self.update_tensors_and_indexes(pos, t_new, ind_new)
         ind = sorted(range(len(indexes[0])), key=lambda k: indexes[0][k])
         self.result = self.tensors[0].transpose(ind)
+        self.clear_all_but_result()
 
     def check_consistency(self):
         if self.n_tensor != len(self.indexes):
@@ -113,6 +114,11 @@ class CONT:
         self.n_tensor -= 1
 
 
+def cont(tensors, indexes):
+    _tmp = CONT(tensors, indexes)
+    return _tmp.result
+
+
 def embed_list_into_matrix(v_list):
     # v is a list of length nv
     # Each element of v, say v[n], is a list that consists of integers or floats
@@ -166,7 +172,7 @@ def decompose_tensor_one_bond(tensor, n, way):
     tensor = tensor.reshape(np.append(s1[index1], d_min))
     permute_back = np.append(np.append(np.arange(0, n-1), dim), np.arange(n, dim-1))
     tensor = tensor.transpose(permute_back)
-    v = v.T
+    v = v.T  # !!!!!!!! remember this transpose !!!!!!!!
     return tensor, v, d_min
 
 

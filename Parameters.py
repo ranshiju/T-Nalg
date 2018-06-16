@@ -1,6 +1,6 @@
 import numpy as np
-import Hamiltonian_Module as hm
-from Basic_Functions_SJR import print_error, print_options, print_dict
+import HamiltonianModule as hm
+from BasicFunctionsSJR import print_error, print_options, print_dict
 
 
 def generate_parameters_dmrg():

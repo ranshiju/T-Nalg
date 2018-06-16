@@ -2,8 +2,8 @@ import numpy as np
 import os.path as o_path
 import matplotlib.pyplot as mp
 from termcolor import cprint, colored
-import Hamiltonian_Module as hm
-from Basic_Functions_SJR import input_and_check_type, input_and_check_value, \
+import HamiltonianModule as hm
+from BasicFunctionsSJR import input_and_check_type, input_and_check_value, \
     save_pr, load_pr, print_options, print_sep, plot_square_lattice, input_and_check_type_multiple_items, \
     plot_connections_polar
 from DMRG_anyH import dmrg_finite_size, sort_positions, positions_set2array
