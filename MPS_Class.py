@@ -8,7 +8,21 @@ from Basic_Functions_SJR import empty_list, trace_stack, sort_list, print_error,
 from termcolor import colored, cprint
 
 
-class MpsOpenBoundaryClass:
+class MpsBasic:
+
+    def __init__(self):
+        self.version = '2018-06-3'
+        self.operators = list()
+
+    def append_operators(self, op_new):
+        if type(op_new) is np.ndarray:
+            self.operators.append(op_new)
+        else:
+            for n in range(0, len(op_new)):
+                self.operators.append(op_new[n])
+
+
+class MpsOpenBoundaryClass(MpsBasic):
     """ Create an open-boundary MPS
     Example: create an MPS with 8 sites
         >>> length = 8  # number of sites/tensors
@@ -37,7 +51,7 @@ class MpsOpenBoundaryClass:
     """
     def __init__(self, length, d, chi, spin='half', way='qr', ini_way='r', operators=None, debug=False,
                  is_parallel=False, is_save_op=False, eig_way=0, par_pool=None):
-        self.version = '2018-06-2'
+        MpsBasic.__init__(self)
         self.spin = spin
         self.phys_dim = d
         self.decomp_way = way  # 'svd' or 'qr'
@@ -121,13 +135,6 @@ class MpsOpenBoundaryClass:
             print('lm[%d] = ' % n + str(self.lm[n]))
         for n in range(0, self.length-1):
             print('ent[%d] = ' % n + str(self.ent[n]))
-
-    def append_operators(self, op_new):
-        if type(op_new) is np.ndarray:
-            self.operators.append(op_new)
-        else:
-            for n in range(0, len(op_new)):
-                self.operators.append(op_new[n])
 
     def orthogonalize_mps(self, l0, l1):
         """
@@ -823,5 +830,68 @@ class MpsOpenBoundaryClass:
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
 
 
+class MpsInfinite(MpsBasic):
+    # class for infinite-size MPS
+    # relevant algorithms: iDMRG, iTEBD, AOP (1D)
 
+    def __init__(self, form, n_tensor, d, chi, dd=-1, spin='half', mpo=None, way='qr', operators=None,
+                 debug=False):
+        MpsBasic.__init__(self)
 
+        self.spin = spin
+        self.n_tensor = n_tensor
+        self.mps = empty_list(self.n_tensor)
+        self.lm = empty_list(self.n_tensor)
+        self.env = empty_list(2, np.zeros(0))
+        self.orthogonality = np.zeros((self.n_tensor, 1)).astype(int)
+        self.is_center_ort = False
+        self.is_canonical = False
+        self.d = d
+        self.chi = chi
+        if dd < 0:
+            self.dd = self.d**2
+        else:
+            self.dd = dd
+
+        # 'center_ort': central orthogonal form, with self.n_tensor fixed to 3 and self.lm[n] = zeros(0)
+        # 'translation_invariant': self.n_tensor is flexible, self.lm[n] must be initialized
+        self.form = form
+        self.initialize_imps()
+
+        self.decomp_way = way
+        if operators is None:
+            op_half = spin_operators(spin)
+            self.op = [op_half['id'], op_half['sx'], op_half['sy'], op_half['sz'], op_half['su'], op_half['sd']]
+        else:
+            self.op = operators
+
+        if mpo is None:
+            self.mpo = empty_list(self.n_tensor, np.zeros(0))
+        else:
+            self.mpo = mpo
+        self._debug = debug
+
+    def initialize_imps(self):
+        if self.form is 'center_ort':
+            # randomly initialize central orthogonal tensor
+            self.n_tensor = 3
+            self.mps = empty_list(self.n_tensor)
+            self.mps[0] = T_module.decompose_tensor_one_bond(np.random.randn(self.chi, self.d, self.chi),
+                                                             2, 'qr')[0]
+            self.mps[2] = self.mps[0].copy().transpose(2, 1, 0)
+            self.mps[1] = np.random.randn(self.chi, self.d, self.chi)
+            self.mps[1] /= np.linalg.norm(self.mps[1].reshape(-1, 1))
+            self.lm = empty_list(self.n_tensor, np.zeros(0))
+            self.env[0] = np.random.randn(self.chi, self.D, self.chi)
+            self.env[1] = self.env[0].copy()
+            self.orthogonality = np.array([-1, 0, 1])
+            self.is_center_ort = True
+
+        elif self.form is 'translation_invariant':
+            # randomly initialize translational invariant tensor
+            # the ordering is: - lm[0] - mps[0] - lm[1] - mps[1] - ... - lm[n] - mps[n]
+            self.mps[0] = np.random.randn(self.chi, self.d, self.chi)
+            self.lm[0] = np.ones((self.chi, 1)) / (self.chi ** (-0.5))
+            for n in range(1, self.n_tensor):
+                self.mps[n] = self.mps[0].copy()
+                self.lm[n] = self.lm[0].copy()

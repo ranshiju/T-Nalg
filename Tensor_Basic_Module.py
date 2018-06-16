@@ -1,9 +1,130 @@
 import numpy as np
-from Basic_Functions_SJR import sort_list, trace_stack, print_error, arg_find_array
+from Basic_Functions_SJR import sort_list, trace_stack, print_error, arg_find_array, arg_find_list
 from termcolor import cprint
 is_debug = False
 if is_debug:
     cprint('Note: you are in the debug mode of module \'Basic_Functions_SJR\'', 'cyan')
+
+
+class CONT:
+
+    def __init__(self, tensors, indexes, _is_debug=False):
+        self._is_debug = _is_debug
+        self.tensors = tensors
+        self.indexes = indexes
+        self.n_tensor = self.tensors.__len__()
+        self.bond_open = list()
+        self.bond_ark = list()
+        self.find_open_ark_bonds()
+
+        if self._is_debug:
+            self.check_consistency()
+
+        for bond in self.bond_ark:
+            tensor_now, index_now, n_found = self.tensors_and_bonds_in_nth_contraction(bond)
+            t_new, ind_new = self.contract_now(tensor_now, index_now)
+            self.update_tensors_and_indexes(n_found, t_new, ind_new)
+        index = abs(self.indexes[0])
+        ind = sorted(range(len(index)), key=lambda k: index[k])
+        self.result = self.tensors[0].transpose(ind)
+
+    def check_consistency(self):
+        if self.n_tensor != len(self.indexes):
+            print_error('ErrorNCON: the number of tensors and number of index tuples are not consistent', False)
+        if self.bond_open[0] != -1:
+            print_error('NumberingError: the starting number of open bonds should be -1', False)
+        if self.bond_open.__len__() != (-self.bond_open[-1]):
+            print_error('NumberingError: all integers in [-1, -(number of open bonds)] should appear in the '
+                        'numbering. Please check.')
+        if self.bond_ark[0] != 1:
+            print_error('NumberingError: the starting number of open bonds should be 1', False)
+        if self.bond_ark.__len__() != self.bond_ark[-1]:
+            print_error('NumberingError: all integers in [-1, -(number of ark bonds)] should appear in the '
+                        'numbering. Please check.')
+
+    def find_open_ark_bonds(self):
+        self.bond_open = set()
+        self.bond_ark = set()
+        for n in range(0, self.n_tensor):
+            for i in range(0, self.indexes[n].__len__()):
+                if self.indexes[n][i] < 0:
+                    self.bond_open.add(self.indexes[n][i])
+                elif self.indexes[n][i] > 0:
+                    self.bond_ark.add(self.indexes[n][i])
+        self.bond_open = list(self.bond_open)
+        self.bond_open.sort(reverse=True)
+        self.bond_ark = list(self.bond_ark)
+        self.bond_ark.sort()
+
+    def tensors_and_bonds_in_nth_contraction(self, bond):
+        # n is the number of the contracted bond
+        n_found = 0
+        tensors_now = list()
+        index_now = list()
+        pos = list()
+        for n in range(0, self.n_tensor):
+            if bond in self.indexes[n]:
+                n_found += 1
+                tensors_now.append(self.tensors[n])
+                index_now.append(self.indexes[n])
+                pos.append(n)
+            if n_found == 2:
+                return tensors_now, index_now, pos
+
+    @ staticmethod
+    def contract_now(t_now, ind_now):
+        # print(t_now[0].shape)
+        # print(ind_now[0])
+        # print(t_now[1].shape)
+        # print(ind_now[1])
+        ind_con = list(set(ind_now[0]) & set(ind_now[1]))
+        ind_con_pos = [list(range(0, ind_con.__len__())), list(range(0, ind_con.__len__()))]
+        for i in range(0, ind_con.__len__()):
+            ind_con_pos[0][i] = ind_now[0].index(ind_con[i])
+            ind_con_pos[1][i] = ind_now[1].index(ind_con[i])
+        ind_left_pos = [list(range(0, ind_now[0].__len__())), list(range(0, ind_now[1].__len__()))]
+        for i in range(0, ind_con.__len__()):
+            ind_left_pos[0].remove(ind_con_pos[0][i])
+            ind_left_pos[1].remove(ind_con_pos[1][i])
+        for i in range(0, ind_con.__len__()):
+            ind_now[0].remove(ind_con[i])
+            ind_now[1].remove(ind_con[i])
+
+        pos0 = ind_left_pos[0].extend(ind_con_pos[0])  # Cannot combine lists in this way
+        pos1 = ind_con_pos[1].extend(ind_left_pos[1])  # Cannot combine lists in this way
+        s0 = t_now[0].shape
+        s1 = t_now[1].shape
+        t_new = t_now[0].transpose(pos0).reshape(np.prod([s0[i] for i in ind_left_pos[0]]),
+                                                 np.prod([s0[i] for i in ind_con_pos[0]]))
+        t_new = t_new.dot(t_now[1].transpose(pos1).reshape(np.prod([s1[i] for i in ind_con_pos[1]]),
+                                                           np.prod([s1[i] for i in ind_left_pos[1]])))
+        s_new0 = [s0[i] for i in ind_left_pos[0]]
+        s_new1 = [s1[i] for i in ind_left_pos[1]]
+        t_new = t_new.reshape(s_new0.extend(s_new1))
+        ind_new = ind_now[0].extend(ind_now[1])
+        return t_new, ind_new
+
+    def update_tensors_and_indexes(self, n_found, t_new, ind_new):
+        self.tensors.__delitem__(n_found[0])
+        self.tensors.__delitem__(n_found[1])
+        self.indexes.__delitem__(n_found[0])
+        self.indexes.__delitem__(n_found[1])
+        self.tensors.append(t_new)
+        self.indexes.append(ind_new)
+        self.n_tensor -= 1
+
+
+def embed_list_into_matrix(v_list):
+    # v is a list of length nv
+    # Each element of v, say v[n], is a list that consists of integers or floats
+    nv = v_list.__len__()
+    dim = np.zeros((nv, )).astype(int)
+    for n in range(0, nv):
+        dim[n] = v_list[n].__len__()
+    mat = np.zeros((nv, max(dim)))
+    for n in range(0, nv):
+        mat[n, :dim[n]] = np.array(v_list[n]).reshape(1, -1)
+    return mat, dim
 
 
 def random_open_mps(l, d, chi):
@@ -322,3 +443,5 @@ def sort_vectors(mat, order, way='column'):
     else:
         return mat
 
+
+# ========================================================

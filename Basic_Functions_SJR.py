@@ -130,6 +130,10 @@ def empty_list(n, content=None):
     return [content for _ in range(0, n)]
 
 
+def remove_element_from_list(x, element):
+    return list(filter(lambda a: a != element, x))
+
+
 def arg_find_array(arg, n=1, which='first'):
     """
     Find the position of positions of elements required
@@ -169,6 +173,29 @@ def arg_find_array(arg, n=1, which='first'):
             if n == 1:
                 y = y[0]
     return y
+
+
+def arg_find_list(x, target, n=1, which='first'):
+    # x should be a list or tuple (of course '1D')
+    # for array or ndarray, please use arg_find_array
+    n_found = 0
+    n_start = 0
+    ind = list()
+    if which is 'last':
+        x = x[::-1]
+    for i in range(0, n):
+        try:
+            new_ind = x.index(target, n_start)
+        except ValueError:
+            pass
+        else:
+            ind.append(new_ind)
+            n_found += 1
+            n_start = new_ind+1
+    if which is 'last':
+        length = x.__len__()
+        ind = [length - tmp - 1 for tmp in ind]
+    return ind
 
 
 # =========================================
