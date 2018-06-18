@@ -131,6 +131,16 @@ def empty_list(n, content=None):
 
 
 def remove_element_from_list(x, element):
+    """
+    Remove an element from a list
+    :param x: a list
+    :param element: an element to be removed
+    :return: a list without 'element' 
+    Example:
+       >>>x = [1, 2, 3]
+       >>>print(arg_find_list(x, 3))
+         [1, 2]
+    """
     return list(filter(lambda a: a != element, x))
 
 
@@ -173,6 +183,18 @@ def arg_find_array(arg, n=1, which='first'):
 
 
 def arg_find_list(x, target, n=1, which='first'):
+    """
+    Find the position of target elements in list
+    :param x: a list
+    :param target: target element
+    :param n: how much elements needed to be find
+    :param which: first or last
+    :return: position
+    Example:
+       >>>x = [1, 2, 1, 3]
+       >>>print(arg_find_list(x, 3, which='last'))
+         [2]
+    """
     # x should be a list or tuple (of course '1D')
     # for array or ndarray, please use arg_find_array
     n_found = 0
@@ -481,6 +503,17 @@ def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms
 # =========================================
 # Plot functions
 def plot_square_lattice(width, height, numbered=False, title='', save_path=None):
+    """
+    Plot a figure of square lattice
+    :param width: width of the square lattice
+    :param height:  height of the square lattice
+    :param numbered:  if show each each lattice dot a number
+    :param title:  title of the figure
+    :param save_path:  if save the figure
+    Example:
+        >>>plot_square_lattice(2, 2)
+          show a figure of a 2x2 square lattice
+    """
     from HamiltonianModule import positions_nearest_neighbor_square
     pos_1d = np.arange(0, width*height, dtype=int).reshape(height, width)
     index = positions_nearest_neighbor_square(width, height)
@@ -503,6 +536,17 @@ def plot_square_lattice(width, height, numbered=False, title='', save_path=None)
 
 
 def plot_connections_polar(positions, numbered=False, title='', save_path=None):
+    """
+    Plot a figure of points on polar coordinate with connections
+    :param positions: position of points
+    :param numbered: if show each each lattice dot a number
+    :param title: title of the figure
+    :param save_path: if save the figure
+    Example:
+        >>>x = np.array([[1, 3], [1, 4], [2, 4]])
+        >>>plot_connections_polar(x, True)
+          plot a figure with [1, 3] are connected, [1, 4] are connected, [2, 4] are connected
+    """
     nb = positions.shape[0]
     ax = mp.subplot(111, projection='polar')
     n_site = np.max(positions) + 1
