@@ -184,7 +184,7 @@ def arg_find_list(x, target, n=1, which='first'):
         try:
             new_ind = x.index(target, n_start)
         except ValueError:
-            pass
+            break
         else:
             ind.append(new_ind)
             n_found += 1

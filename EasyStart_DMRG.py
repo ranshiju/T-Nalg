@@ -111,7 +111,8 @@ if is_from_input:
     print('Other parameters are set as default ...')
     para['spin'] = 'half'
     op = hm.spin_operators(para['spin'])
-    para['op'] = [op['id'], op['sx'], op['sy'], op['sz'], op['su'], op['sd']]
+    para['op'] = [op['id'], op['sx'], op['sy'], op['sz'], op['su'], op['sd'], -para['hx']*op['sx']
+                  - para['hz']*op['sz']]
     para['d'] = 2  # Physical bond dimension
     para['sweep_time'] = 500  # sweep time
     # Fixed parameters
@@ -141,6 +142,12 @@ if is_from_input:
     para['index1'] = np.mat(np.arange(0, para['l']))
     para['index1'] = np.vstack((para['index1'], 6 * np.ones((1, para['l'])))).T.astype(int)
     para['index2'] = hm.interactions_position2full_index_heisenberg_two_body(para['positions_h2'])
+    para['coeff1'] = np.ones((para['l'], 1))
+    para['coeff2'] = np.ones((para['positions_h2'].shape[0], 1))
+    for n in range(0, para['positions_h2'].shape[0]):
+        para['coeff2'][n * 3, 1] = para['jxy']
+        para['coeff2'][n * 3 + 1, 1] = para['jxy']
+        para['coeff2'][n * 3 + 2, 1] = para['jz']
 else:
     from Parameters import generate_parameters_dmrg
     para = generate_parameters_dmrg()
