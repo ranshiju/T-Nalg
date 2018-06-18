@@ -143,7 +143,7 @@ if is_from_input:
     para['index1'] = np.vstack((para['index1'], 6 * np.ones((1, para['l'])))).T.astype(int)
     para['index2'] = hm.interactions_position2full_index_heisenberg_two_body(para['positions_h2'])
     para['coeff1'] = np.ones((para['l'], 1))
-    para['coeff2'] = np.ones((para['positions_h2'].shape[0], 1))
+    para['coeff2'] = np.ones((para['positions_h2'].shape[0]*3, 1))
     for n in range(0, para['positions_h2'].shape[0]):
         para['coeff2'][n * 3, 1] = para['jxy']
         para['coeff2'][n * 3 + 1, 1] = para['jxy']
