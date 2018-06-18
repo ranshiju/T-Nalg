@@ -145,9 +145,9 @@ if is_from_input:
     para['coeff1'] = np.ones((para['l'], 1))
     para['coeff2'] = np.ones((para['positions_h2'].shape[0]*3, 1))
     for n in range(0, para['positions_h2'].shape[0]):
-        para['coeff2'][n * 3, 1] = para['jxy']
-        para['coeff2'][n * 3 + 1, 1] = para['jxy']
-        para['coeff2'][n * 3 + 2, 1] = para['jz']
+        para['coeff2'][n * 3, 0] = para['jxy']
+        para['coeff2'][n * 3 + 1, 0] = para['jxy']
+        para['coeff2'][n * 3 + 2, 0] = para['jz']
 else:
     from Parameters import generate_parameters_dmrg
     para = generate_parameters_dmrg()
