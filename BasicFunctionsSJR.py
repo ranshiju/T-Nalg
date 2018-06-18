@@ -294,7 +294,7 @@ def print_sep(info='', style='=', length=40, color='cyan'):
         cprint(mes, color)
 
 
-def print_options(options, start=1, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
+def print_options(options, start=None, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
     """
     Print the options
     :param options: possible options
@@ -305,16 +305,18 @@ def print_options(options, start=1, welcome='', style_sep=': ', end='    ', colo
     :param color: color
     Example:
         >>>a = ['left', 'right']
-        >>>print_options(a, 1, 'Where to go:')
+        >>>print_options(a, [1, 2], 'Where to go:')
           Where to go:1: left    2: right
     """
     message = welcome
     length = len(options)
+    if start is None:
+        start = list(range(0, options.__len__()))
     for i in range(0, length):
         if quote is None:
-            message += colored(str(i + start) + style_sep + options[i], color)
+            message += colored(str(start[i]) + style_sep + options[i], color)
         elif type(quote) is str:
-            message += colored(str(i + start) + style_sep + quote + options[i] + quote, color)
+            message += colored(str(start[i]) + style_sep + quote + options[i] + quote, color)
         if i < length-1:
             message += end
     print(message)
@@ -355,7 +357,7 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
     return value
 
 
-def input_and_check_value(right_value, values_str, names='', dict_name='', start_ind=-1):
+def input_and_check_value(right_value, values_str, names='', dict_name=''):
     """
     Input and check the value of input
     :param right_value:  allowed values of input
@@ -373,7 +375,6 @@ def input_and_check_value(right_value, values_str, names='', dict_name='', start
     # right_value should be an array
     ok = False
     some_error = True
-    right_value = set(right_value)
     while some_error:
         try:
             while not ok:
@@ -385,10 +386,8 @@ def input_and_check_value(right_value, values_str, names='', dict_name='', start
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
-    if start_ind < 0:
-        start_ind = 0
-    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
-                                    str(values_str[value - start_ind]) + '\'', 'cyan'))
+    ind = right_value.index(value)
+    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' + str(values_str[ind]) + '\'', 'cyan'))
     return value
 
 

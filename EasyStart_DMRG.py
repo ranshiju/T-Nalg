@@ -62,8 +62,8 @@ if is_from_input:
     para['hx'] = input_and_check_type((int, float), 'hx')
     para['hz'] = input_and_check_type((int, float), 'hz')
 
-    print_options(('chain', 'square', 'arbitrary'), welcome='For the lattice, please chose: ')
-    tmp = input_and_check_value([1, 2, 3], ('chain', 'square', 'arbitrary'), 'lattice', 'para', start_ind=1)
+    print_options(('chain', 'square', 'arbitrary'), [1, 2, 3], welcome='For the lattice, please chose: ')
+    tmp = input_and_check_value([1, 2, 3], ('chain', 'square', 'arbitrary'), 'lattice', 'para')
     para['lattice'] = ['chain', 'square', 'arbitrary'][tmp-1]
     if para['lattice'] == 'chain':
         print('For the length of the chain')
@@ -96,8 +96,8 @@ if is_from_input:
         para['l'] = np.max(para['positions_h2']) + 1
         para['bound_cond'] = ''
     if para['lattice'] != 'arbitrary':
-        print_options(('open BC', 'periodic BC'), welcome='For the boundary condition (BC), please chose: ')
-        tmp = input_and_check_value([1, 2], ('open', 'periodic'), 'bound_cond', 'para', start_ind=1)
+        print_options(('open BC', 'periodic BC'), [1, 2], welcome='For the boundary condition (BC), please chose: ')
+        tmp = input_and_check_value([1, 2], ('open', 'periodic'), 'bound_cond', 'para')
         para['bound_cond'] = (('open', 'periodic')[tmp-1])
     print('For the dimension cut-off (if you are not sure what to input, input -1)')
     para['chi'] = input_and_check_type(int, 'chi')
@@ -160,9 +160,8 @@ print_sep('Start DMRG simulation')
 if is_load_data and o_path.isfile(data_full_name) and (para['lattice'] in ('chain', 'square')):
     print('The data exists in ' + para['data_path'].rstrip("\\") + '. Load directly...')
     ob, A = load_pr(data_full_name, ('ob', 'A'))
-elif (not is_load_data) or (not o_path.isfile(data_full_name)):
+else:
     ob, A, info, para = dmrg_finite_size(para)
-if (not o_path.isfile(data_full_name)) or (para['lattice'] is 'arbitrary'):
     if A._is_parallel:
         A.pool.close()
     save_pr(para['data_path'], para['data_exp'] + '.pr', (ob, A, info, para), ('ob', 'A', 'info', 'para'))
@@ -173,9 +172,9 @@ if is_from_input:
     end_plot = False
     while not end_plot:
         print('Which property are you interested in (' + colored('to exit, input 0', 'cyan') + '):')
-        options = ('bond energies', 'magnetization', 'entanglement entropy')
-        print_options(options)
-        x = input_and_check_value(np.vstack(((np.arange(1, len(options)+1)).reshape(-1, 1), 0)).T, start_ind=1)
+        options = ('bond energies', 'magnetization', 'entanglement entropy', 'exit')
+        print_options(options, list(range(1, options.__len__())) + [0])
+        x = input_and_check_value(list(range(1, options.__len__())) + [0], options)
         if x == 0:
             end_plot = True
         elif x == 1:  # plot bond energies
