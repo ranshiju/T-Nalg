@@ -1,5 +1,5 @@
 import numpy as np
-from Basic_Functions_SJR import sort_list, trace_stack, print_error, arg_find_array, arg_find_list
+from BasicFunctionsSJR import sort_list, trace_stack, print_error, arg_find_array
 from termcolor import cprint
 is_debug = False
 if is_debug:
@@ -20,13 +20,13 @@ class CONT:
         if self._is_debug:
             self.check_consistency()
 
-        for bond in self.bond_ark:
-            tensor_now, index_now, n_found = self.tensors_and_bonds_in_nth_contraction(bond)
+        while self.bond_ark.__len__() > 0:
+            tensor_now, index_now, pos = self.tensors_and_bonds_in_nth_contraction(self.bond_ark[0])
             t_new, ind_new = self.contract_now(tensor_now, index_now)
-            self.update_tensors_and_indexes(n_found, t_new, ind_new)
-        index = abs(self.indexes[0])
-        ind = sorted(range(len(index)), key=lambda k: index[k])
+            self.update_tensors_and_indexes(pos, t_new, ind_new)
+        ind = sorted(range(len(indexes[0])), key=lambda k: indexes[0][k])
         self.result = self.tensors[0].transpose(ind)
+        self.clear_all_but_result()
 
     def check_consistency(self):
         if self.n_tensor != len(self.indexes):
@@ -71,8 +71,7 @@ class CONT:
             if n_found == 2:
                 return tensors_now, index_now, pos
 
-    @ staticmethod
-    def contract_now(t_now, ind_now):
+    def contract_now(self, t_now, ind_now):
         # print(t_now[0].shape)
         # print(ind_now[0])
         # print(t_now[1].shape)
@@ -89,9 +88,10 @@ class CONT:
         for i in range(0, ind_con.__len__()):
             ind_now[0].remove(ind_con[i])
             ind_now[1].remove(ind_con[i])
+            self.bond_ark.remove(ind_con[i])
 
-        pos0 = ind_left_pos[0].extend(ind_con_pos[0])  # Cannot combine lists in this way
-        pos1 = ind_con_pos[1].extend(ind_left_pos[1])  # Cannot combine lists in this way
+        pos0 = ind_left_pos[0] + ind_con_pos[0]
+        pos1 = ind_con_pos[1] + ind_left_pos[1]
         s0 = t_now[0].shape
         s1 = t_now[1].shape
         t_new = t_now[0].transpose(pos0).reshape(np.prod([s0[i] for i in ind_left_pos[0]]),
@@ -100,18 +100,23 @@ class CONT:
                                                            np.prod([s1[i] for i in ind_left_pos[1]])))
         s_new0 = [s0[i] for i in ind_left_pos[0]]
         s_new1 = [s1[i] for i in ind_left_pos[1]]
-        t_new = t_new.reshape(s_new0.extend(s_new1))
-        ind_new = ind_now[0].extend(ind_now[1])
+        t_new = t_new.reshape(s_new0 + s_new1)
+        ind_new = ind_now[0] + ind_now[1]
         return t_new, ind_new
 
-    def update_tensors_and_indexes(self, n_found, t_new, ind_new):
-        self.tensors.__delitem__(n_found[0])
-        self.tensors.__delitem__(n_found[1])
-        self.indexes.__delitem__(n_found[0])
-        self.indexes.__delitem__(n_found[1])
+    def update_tensors_and_indexes(self, pos, t_new, ind_new):
+        self.tensors.__delitem__(max(pos))
+        self.tensors.__delitem__(min(pos))
+        self.indexes.__delitem__(max(pos))
+        self.indexes.__delitem__(min(pos))
         self.tensors.append(t_new)
         self.indexes.append(ind_new)
         self.n_tensor -= 1
+
+
+def cont(tensors, indexes):
+    _tmp = CONT(tensors, indexes)
+    return _tmp.result
 
 
 def embed_list_into_matrix(v_list):
@@ -167,7 +172,7 @@ def decompose_tensor_one_bond(tensor, n, way):
     tensor = tensor.reshape(np.append(s1[index1], d_min))
     permute_back = np.append(np.append(np.arange(0, n-1), dim), np.arange(n, dim-1))
     tensor = tensor.transpose(permute_back)
-    v = v.T
+    v = v.T  # !!!!!!!! remember this transpose !!!!!!!!
     return tensor, v, d_min
 
 

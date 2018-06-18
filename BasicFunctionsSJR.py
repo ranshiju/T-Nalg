@@ -147,9 +147,6 @@ def arg_find_array(arg, n=1, which='first'):
         >>> z = arg_find_array(x < 0, 1, 'last')
           z = 2
     """
-    # find the first/last n True's in the arg
-    # like the "find" function in Matlab
-    # the input must be array or ndarray
     x = np.nonzero(arg)
     length = x[0].size
     if length == 0:
@@ -187,7 +184,7 @@ def arg_find_list(x, target, n=1, which='first'):
         try:
             new_ind = x.index(target, n_start)
         except ValueError:
-            pass
+            break
         else:
             ind.append(new_ind)
             n_found += 1
@@ -297,7 +294,7 @@ def print_sep(info='', style='=', length=40, color='cyan'):
         cprint(mes, color)
 
 
-def print_options(options, start=1, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
+def print_options(options, start=None, welcome='', style_sep=': ', end='    ', color='cyan', quote=None):
     """
     Print the options
     :param options: possible options
@@ -308,16 +305,18 @@ def print_options(options, start=1, welcome='', style_sep=': ', end='    ', colo
     :param color: color
     Example:
         >>>a = ['left', 'right']
-        >>>print_options(a, 1, 'Where to go:')
+        >>>print_options(a, [1, 2], 'Where to go:')
           Where to go:1: left    2: right
     """
     message = welcome
     length = len(options)
+    if start is None:
+        start = list(range(0, options.__len__()))
     for i in range(0, length):
         if quote is None:
-            message += colored(str(i + start) + style_sep + options[i], color)
+            message += colored(str(start[i]) + style_sep + options[i], color)
         elif type(quote) is str:
-            message += colored(str(i + start) + style_sep + quote + options[i] + quote, color)
+            message += colored(str(start[i]) + style_sep + quote + options[i] + quote, color)
         if i < length-1:
             message += end
     print(message)
@@ -358,29 +357,7 @@ def input_and_check_type(right_type, name, print_result=True, dict_name='para'):
     return value
 
 
-# def input_and_check_value(right_value, values_str=(), names='', dict_name='', start_ind=-1):
-#     # right_value should be an array
-#     ok = False
-#     some_error = True
-#     while some_error:
-#         try:
-#             while not ok:
-#                 value = eval(input('Please input your choice: '))
-#                 if value in right_value:
-#                     ok = True
-#                 else:
-#                     value = eval(input('Input should be ' + colored(str(right_value), 'cyan')
-#                                        + ', please input again: '))
-#             some_error = False
-#         except (NameError, ValueError, SyntaxError):
-#             cprint('The input is illegal, please input again ...', 'magenta')
-#     if start_ind < 0:
-#         start_ind = right_value[0]
-#         print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
-#                                         str(values_str[value - start_ind]) + '\'', 'cyan'))
-#     return value
-
-def input_and_check_value(right_value, values_str, names='', dict_name='', start_ind=-1):
+def input_and_check_value(right_value, values_str, names='', dict_name=''):
     """
     Input and check the value of input
     :param right_value:  allowed values of input
@@ -398,7 +375,6 @@ def input_and_check_value(right_value, values_str, names='', dict_name='', start
     # right_value should be an array
     ok = False
     some_error = True
-    right_value = set(right_value)
     while some_error:
         try:
             while not ok:
@@ -410,10 +386,8 @@ def input_and_check_value(right_value, values_str, names='', dict_name='', start
             some_error = False
         except (NameError, ValueError, SyntaxError):
             cprint('The input is illegal, please input again ...', 'magenta')
-    if start_ind < 0:
-        start_ind = 0
-    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' +
-                                    str(values_str[value - start_ind]) + '\'', 'cyan'))
+    ind = right_value.index(value)
+    print('You have set ' + colored(dict_name + '[\'' + names + '\'] = \'' + str(values_str[ind]) + '\'', 'cyan'))
     return value
 
 
@@ -507,7 +481,7 @@ def input_and_check_type_multiple_items(right_type0, cond=None, name='your terms
 # =========================================
 # Plot functions
 def plot_square_lattice(width, height, numbered=False, title='', save_path=None):
-    from Hamiltonian_Module import positions_nearest_neighbor_square
+    from HamiltonianModule import positions_nearest_neighbor_square
     pos_1d = np.arange(0, width*height, dtype=int).reshape(height, width)
     index = positions_nearest_neighbor_square(width, height)
     for n in range(0, index.shape[0]):

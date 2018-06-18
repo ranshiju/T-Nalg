@@ -1,17 +1,16 @@
-# T-Nalg
-Tensor Netwok Algorithms for EVERYONE   
-* If our code helps your project, please cite our tensor network review paper: S. J. Ran, et al., arXiv.1708.09213. (https://arxiv.org/abs/1708.09213)   
-* Before using, you need to install numpy, scipy, and matplotlib in your python
+# T-Nalg: Tensor Netwok Algorithms for EVERYONE   
+* The aim of EasyStartDMRG is to let everyone be able to use DMRG to simulate the ground state of any quantum models.
+* If our code helps your project, please cite our tensor network review paper: S. J. Ran, et al., arXiv.1708.09213. (*https://arxiv.org/abs/1708.09213*)   
+*  Before using, you need to install **numpy, scipy, and matplotlib** in your python
 
 ## DMRG for any finite-size lattices
 ### Two ways of using DMRG:
   1. Set up Parameters.py and run dmrg_finite_size in DMRG_anyH.py    
-    >>> import DMRG_anyH   
-    >>> dmrg_finite_size   
+	\>>> import DMRG_anyH   
+      \>>> dmrg_finite_size   
   2. Run EasyStartDMRG directly    
-    >>> import EasyStart_DMRG    
-    >>> EasyStart_DMRG    
-*The aim of EasyStartDMRG is to let everyone be able to use DMRG to simulate the ground state of any quantum models. One can run 'EasyStartDMRG' to start.   
+      \>>> import EasyStart_DMRG    
+      \>>> EasyStart_DMRG    
 ### To use EasyStartDMRG, you only need to know three things:   
     1.What you are simulating (e.g., Heisenber model, entanglement, ect.)    
     2.How to run a Python code   
@@ -50,3 +49,4 @@ Tensor Netwok Algorithms for EVERYONE
  [6] AOP (1D): Shi-Ju Ran. Ab initio optimization principle for the ground states of translationally invariant strongly-correlated quantum lattice models. Phys. Rev. E 93, 053310 (2016).  
  [7] AOP (2D and 3D): Shi-Ju Ran, Angelo Piga, Cheng Peng, Gang Su, and Maciej Lewenstein. Few-body systems capture many-body physics: Tensor network approach. Phys. Rev. B 96, 155120 (2017).   
  [8] Shi-Ju Ran, et al., in preparation.
+

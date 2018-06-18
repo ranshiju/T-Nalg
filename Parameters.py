@@ -1,6 +1,6 @@
 import numpy as np
-import Hamiltonian_Module as hm
-from Basic_Functions_SJR import print_error, print_options, print_dict
+import HamiltonianModule as hm
+from BasicFunctionsSJR import print_error, print_options, print_dict
 
 
 def generate_parameters_dmrg():
@@ -51,15 +51,14 @@ def parameter_dmrg_arbitrary():
     # If you want more operators, just add them in the list
     op = hm.spin_operators(para['spin'])
     para['op'] = [op['id'], op['sx'], op['sy'], op['sz'], op['su'], op['sd']]
-
     # The numbers of the spin operators are defined in op
     # For each row (say the m-th), it means one one-body terms where the site index1[m, 0] is acted by the
     #   operator op[index1[m, 1]]
     # The example below means the sz terms on the sites 0, 1, and 2
     para['index1'] = [
-        [0, 1],
-        [1, 1],
-        [2, 1]
+        [0, 6],
+        [1, 6],
+        [2, 6]
     ]
     para['coeff1'] = [0.1, 0.1, 0.1]
 
@@ -72,7 +71,7 @@ def parameter_dmrg_arbitrary():
         [0, 1, 3, 3],
         [1, 2, 3, 3]
     ]
-    para['coeff2'] = [1, 1, 1]
+    para['coeff2'] = [1, 1]
     para['data_exp'] = 'Put_here_your_file_name_to_save_data'
 
     # ====================================================================

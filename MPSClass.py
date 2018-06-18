@@ -1,9 +1,9 @@
-import Tensor_Basic_Module as T_module
+import TensorBasicModule as T_module
 import numpy as np
 from ipdb import set_trace
 import scipy.sparse.linalg as la
-from Hamiltonian_Module import spin_operators
-from Basic_Functions_SJR import empty_list, trace_stack, sort_list, print_error, print_sep, \
+from HamiltonianModule import spin_operators
+from BasicFunctionsSJR import empty_list, trace_stack, sort_list, print_error, print_sep, \
     print_options, print_dict, info_contact
 from termcolor import colored, cprint
 
@@ -830,18 +830,32 @@ class MpsOpenBoundaryClass(MpsBasic):
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
 
 
+# class for infinite-size MPS
+# relevant algorithms: iDMRG, iTEBD, AOP (1D)
 class MpsInfinite(MpsBasic):
-    # class for infinite-size MPS
-    # relevant algorithms: iDMRG, iTEBD, AOP (1D)
+    """The tensors and bonds for central orthogonal MPS are arranged as:
+            |        |        |
+        - mps[0] - mps[1] - mps[2] -
 
+             1                    1                    1
+             |                    |                    |
+        0 - mps[0] - 2       0 - mps[1] - 2       2 - mps[2] - 0
+      (left to right ort)     (normalized)      (right to left ort)
+
+    The tensors and bonds for MPO are arranged as:
+            1
+            |
+        0 - T - 3
+            |
+            2
+    """
     def __init__(self, form, n_tensor, d, chi, dd=-1, spin='half', mpo=None, way='qr', operators=None,
                  debug=False):
         MpsBasic.__init__(self)
-
         self.spin = spin
         self.n_tensor = n_tensor
         self.mps = empty_list(self.n_tensor)
-        self.lm = empty_list(self.n_tensor)
+        self.lm = empty_list(self.n_tensor, np.zeros(0))
         self.env = empty_list(2, np.zeros(0))
         self.orthogonality = np.zeros((self.n_tensor, 1)).astype(int)
         self.is_center_ort = False
@@ -895,3 +909,32 @@ class MpsInfinite(MpsBasic):
             for n in range(1, self.n_tensor):
                 self.mps[n] = self.mps[0].copy()
                 self.lm[n] = self.lm[0].copy()
+
+    def update_left_env(self, tensor):
+        self.env[0] = T_module.cont([self.mps[0].conj(), tensor, self.mps[0], self.env[0]],
+                                    [[4, 5, -1], [1, 5, 3, -2], [2, 3, -3], [4, 1, 2]])
+
+    def update_right_env(self, tensor):
+        self.env[1] = T_module.cont([self.mps[2].conj(), tensor, self.mps[2], self.env[1]],
+                                    [[4, 5, -1], [-2, 5, 3, 1], [2, 3, -3], [4, 1, 2]])
+
+    def update_ort_tensor_mps(self, which):
+        tmp = T_module.left2right_decompose_tensor(self.mps[1], self.decomp_way) # both use left2right
+        if which is 'left':
+            self.mps[0] = tmp[0]
+            if self.decomp_way is 'svd':
+                self.lm[0] = tmp[3]
+        elif which is 'right':
+            self.mps[2] = tmp[0]
+            if self.decomp_way is 'svd':
+                self.lm[1] = tmp[3]
+
+    def effective_hamiltonian(self, tensor):
+        h = T_module.cont([self.env[0], tensor, self.env[1]], [[-1, 1, -4], [1, -2, -5, 2], [-3, 2, -6]])
+        s = h.shape
+        h = h.reshape(s[0]*s[1]*s[2], s[3]*s[4]*s[5])
+        return h
+
+    def update_central_tensor(self, tensor):
+        h = self.effective_hamiltonian(tensor)
+        self.mps[1] = la.eigs(h, 1, v0=self.mps[1].reshape(-1, 1))[1].reshape(self.chi, self.d, self.chi)
