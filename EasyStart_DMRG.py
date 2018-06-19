@@ -171,7 +171,7 @@ print_sep('DMRG simulation finished')
 if is_from_input:
     end_plot = False
     while not end_plot:
-        print('Which property are you interested in (' + colored('to exit, input 0', 'cyan') + '):')
+        print('Which property are you interested in:')
         options = ('bond energies', 'magnetization', 'entanglement entropy', 'exit')
         print_options(options, list(range(1, options.__len__())) + [0])
         x = input_and_check_value(list(range(1, options.__len__())) + [0], options)

@@ -119,19 +119,6 @@ def cont(tensors, indexes):
     return _tmp.result
 
 
-def embed_list_into_matrix(v_list):
-    # v is a list of length nv
-    # Each element of v, say v[n], is a list that consists of integers or floats
-    nv = v_list.__len__()
-    dim = np.zeros((nv, )).astype(int)
-    for n in range(0, nv):
-        dim[n] = v_list[n].__len__()
-    mat = np.zeros((nv, max(dim)))
-    for n in range(0, nv):
-        mat[n, :dim[n]] = np.array(v_list[n]).reshape(1, -1)
-    return mat, dim
-
-
 def random_open_mps(l, d, chi):
     # Create a random MPS with open boundary condition
     # l: length; d: physical dimension; chi: virtual dimension
@@ -450,3 +437,15 @@ def sort_vectors(mat, order, way='column'):
 
 
 # ========================================================
+# Some special functions
+def embed_list_into_matrix(v_list):
+    # v is a list of length nv
+    # Each element of v, say v[n], is a list that consists of integers or floats
+    nv = v_list.__len__()
+    dim = np.zeros((nv, )).astype(int)
+    for n in range(0, nv):
+        dim[n] = v_list[n].__len__()
+    mat = np.zeros((nv, max(dim)))
+    for n in range(0, nv):
+        mat[n, :dim[n]] = np.array(v_list[n]).reshape(1, -1)
+    return mat, dim
