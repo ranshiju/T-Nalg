@@ -138,25 +138,26 @@ def ones_open_mps(l, d, chi):
     return mps
 
 
-def decompose_tensor_one_bond(tensor, n, way):
+def decompose_tensor_one_bond(tensor, n, way='qr'):
     # decompose a matrix from te n-th bond of the tensor
     # the resulting tensor is an isometry
     # the matrix v has the second bond as the new index by the decomposition
-    s1 = tensor.shape
+    s1 = np.array(tensor.shape)
     dim = tensor.ndim
-    index1 = np.append(np.arange(0, n-1), np.arange(n+1, dim))
+    index1 = np.append(np.arange(0, n), np.arange(n+1, dim))
     tensor = tensor.transpose(np.append(index1, n))
-    tensor = tensor.reshape(np.prod(s1[index1]), s1[n])
-    d_min = min(np.prod(s1[index1]), s1[n])
+    d_new = np.prod(s1[index1])
+    tensor = tensor.reshape(d_new, s1[n])
+    d_min = min(d_new, s1[n])
     if way == 1 or way == "svd":
         # Use SVD decomposition
         tensor, lm, v = np.linalg.svd(tensor)
         v = np.dot(np.diag(lm), v[:d_min, :])
     else:
         # Use QR decomposition
-        tensor, v = np.linalg.qr(tensor)
-    tensor = tensor.reshape(np.append(s1[index1], d_min))
-    permute_back = np.append(np.append(np.arange(0, n-1), dim), np.arange(n, dim-1))
+        tensor, v = np.linalg.qr(tensor, mode='reduced')
+    tensor = tensor[:, 0:d_min].reshape(np.append(s1[index1], d_min))
+    permute_back = np.append(np.append(np.arange(0, n), dim-1), np.arange(n, dim-1))
     tensor = tensor.transpose(permute_back)
     v = v.T  # !!!!!!!! remember this transpose !!!!!!!!
     return tensor, v, d_min
