@@ -135,7 +135,7 @@ def remove_element_from_list(x, element):
     Remove an element from a list
     :param x: a list
     :param element: an element to be removed
-    :return: a list without 'element' 
+    :return: a list without 'element'
     Example:
        >>>x = [1, 2, 3]
        >>>print(arg_find_list(x, 3))
