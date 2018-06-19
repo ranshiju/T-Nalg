@@ -291,7 +291,7 @@ def left2right_decompose_tensor(tensor, way='qr'):
     return tensor, v, dim, lm
 
 
-def right2left_decompose_tensor(tensor, way):
+def right2left_decompose_tensor(tensor, way='qr'):
     """
     Decompose a rank 3 tensor on the 1rd bond
     :param tensor: a rank 3 tensor
