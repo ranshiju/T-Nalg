@@ -26,7 +26,6 @@ class CONT:
             self.update_tensors_and_indexes(pos, t_new, ind_new)
         ind = sorted(range(len(indexes[0])), key=lambda k: indexes[0][k])
         self.result = self.tensors[0].transpose(ind)
-        self.clear_all_but_result()
 
     def check_consistency(self):
         if self.n_tensor != len(self.indexes):
