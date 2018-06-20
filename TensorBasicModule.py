@@ -114,11 +114,55 @@ class CONT:
 
 
 def cont(tensors, indexes):
+    """
+    Contract tensors sharing the same positive indexes, leave negative indexes open
+    :param tensors: tensors
+    :param indexes: indexes of tensors,
+    :return:  contracted tensor
+    Example:
+        >>>a = np.array([[[1, 2, 3],[3, 4, 5]],[[3, 4, 5],[6, 7, 8]]])
+        >>>b = np.array([[[2, 3, 4,], [4, 5, 6]], [[5, 6, 7], [8, 1, 2]]])
+        >>>index1 = [[1, 2, -1], [2, 1, -2]]
+        >>>c = cont([a, b], index1)
+          [[ 77  96 115]
+           [ 42  57  72]
+           [ 55  74  93]]
+    """
     _tmp = CONT(tensors, indexes)
     return _tmp.result
 
 
 def random_open_mps(l, d, chi):
+    """
+    Generate an open MPS randomly
+    :param l:  length of MPS
+    :param d: dimension on the physical bonds
+    :param chi: dimension of inner bonds
+    :return:  MPS
+    Example:
+        >>>M = random_open_mps(3, 2, 3)
+        >>>print(M[0])
+          [[[-2.5679364  -1.12846181  0.12026503]
+            [ 1.23217514  0.58611443  0.66304506]]]
+        >>>print(M[1])
+          [[[ 0.02140644 -0.2359836   1.41704847]
+            [ 0.42441594  0.11000762 -0.23754322]]
+
+            [[ 0.42759564  0.32495413 -0.81798019]
+             [-0.54115541  0.63275244 -0.31163543]]
+
+            [[-1.11706565  0.36694417 -1.67561183]
+             [-0.37247627  0.85373283  0.99919477]]]
+        >>>print(M[2])
+          [[[-1.01253065]
+            [-0.82606855]]
+
+           [[ 0.524324  ]
+            [ 0.52489905]]
+
+           [[ 0.68181659]
+            [-0.62746486]]]
+    """
     # Create a random MPS with open boundary condition
     # l: length; d: physical dimension; chi: virtual dimension
     mps = list(range(0, l))
@@ -130,6 +174,36 @@ def random_open_mps(l, d, chi):
 
 
 def ones_open_mps(l, d, chi):
+    """
+    Generate an open MPS with all elements are 1
+    :param l:  length of MPS
+    :param d: dimension on the physical bonds
+    :param chi: dimension of inner bonds
+    :return:  MPS
+    Example:
+        >>>M = ones_open_mps(3, 2, 3)
+        >>>print(M[0])
+          [[[1.  1.  1.]
+            [1.  1.  1.]]]
+        >>>print(M[1])
+          [[[1.  1.  1.]
+            [1.  1.  1.]]
+
+            [[1.  1.  1.]
+             [1.  1.  1.]]
+
+            [[1.  1.  1.]
+             [1.  1.  1.]]]
+        >>>print(M[2])
+          [[[1.]
+            [1.]]
+
+           [[1.]
+            [1.]]
+
+           [[1.]
+            [1.]]]
+    """
     mps = list(range(0, l))
     mps[0] = np.ones((1, d, chi))
     mps[l - 1] = np.ones((chi, d, 1))
@@ -139,6 +213,24 @@ def ones_open_mps(l, d, chi):
 
 
 def decompose_tensor_one_bond(tensor, n, way='qr'):
+    """
+    Decompose a tensor on the n-th bond to make it orthogonal on n-th bond
+    :param tensor: a tensor
+    :param n:  the bond to be decomposed
+    :param way:  svd decomposition or qr decomposition
+    :return:  decomposed tensor, matrix, and dimension of new bond
+    Notes: n counts from 0
+    Example:
+        >>>T = np.random.randn(4, 4, 4)
+        >>>[T1, v, d] = decompose_tensor_one_bond(T, 1)
+        >>>T2 = cont([T1, T1], [[1, 2, -1], [1, 2, -2]])
+        >>>print(T2)
+          [[ 1.00000000e+00  5.55111512e-17  6.93889390e-17  4.16333634e-17]
+           [ 5.55111512e-17  1.00000000e+00  9.71445147e-17 -1.38777878e-17]
+           [ 6.93889390e-17  9.71445147e-17  1.00000000e+00 -2.77555756e-17]
+           [ 4.16333634e-17 -1.38777878e-17 -2.77555756e-17  1.00000000e+00]]
+
+    """
     # decompose a matrix from te n-th bond of the tensor
     # the resulting tensor is an isometry
     # the matrix v has the second bond as the new index by the decomposition
@@ -163,7 +255,23 @@ def decompose_tensor_one_bond(tensor, n, way='qr'):
     return tensor, v, d_min
 
 
-def left2right_decompose_tensor(tensor, way):
+def left2right_decompose_tensor(tensor, way='qr'):
+    """
+    Decompose a rank 3 tensor on the 3rd bond
+    :param tensor: a rank 3 tensor
+    :param way:  svd decomposition or qr decomposition
+    :return:  decomposed tensor, matrix, dimension of new bond, and  singular value spectrum
+    Example:
+        >>>T = np.random.randn(4, 4, 4)
+        >>>T1 = left2right_decompose_tensor(T)
+        >>>T2 = cont([T1, T1], [[-1, 1, 2], [-2, 1, 2]])
+        >>>print(T2)
+          [[ 1.00000000e+00  5.55111512e-17  6.93889390e-17  4.16333634e-17]
+           [ 5.55111512e-17  1.00000000e+00  9.71445147e-17 -1.38777878e-17]
+           [ 6.93889390e-17  9.71445147e-17  1.00000000e+00 -2.77555756e-17]
+           [ 4.16333634e-17 -1.38777878e-17 -2.77555756e-17  1.00000000e+00]]
+
+    """
     # Transform a local tensor to left2right orthogonal form
     # the resulting tensor is an isometry
     # the matrix v has the second bond as the new index by the decomposition
@@ -183,7 +291,23 @@ def left2right_decompose_tensor(tensor, way):
     return tensor, v, dim, lm
 
 
-def right2left_decompose_tensor(tensor, way):
+def right2left_decompose_tensor(tensor, way='qr'):
+    """
+    Decompose a rank 3 tensor on the 1rd bond
+    :param tensor: a rank 3 tensor
+    :param way:  svd decomposition or qr decomposition
+    :return:  decomposed tensor, matrix, dimension of new bond, and  singular value spectrum
+    Example:
+        >>>T = np.random.randn(4, 4, 4)
+        >>>T1 = right2left_decompose_tensor(T)
+        >>>T2 = cont([T1, T1], [[1, 2, -1], [1, 2, -2]])
+        >>>print(T2)
+          [[ 1.00000000e+00  5.55111512e-17  6.93889390e-17  4.16333634e-17]
+           [ 5.55111512e-17  1.00000000e+00  9.71445147e-17 -1.38777878e-17]
+           [ 6.93889390e-17  9.71445147e-17  1.00000000e+00 -2.77555756e-17]
+           [ 4.16333634e-17 -1.38777878e-17 -2.77555756e-17  1.00000000e+00]]
+
+    """
     # Transform a local tensor to left2right orthogonal form
     # for manipulate MPS
     s1 = np.shape(tensor)
