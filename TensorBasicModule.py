@@ -327,6 +327,22 @@ def right2left_decompose_tensor(tensor, way='qr'):
 
 
 def absorb_matrix2tensor(tensor, mat, bond):
+    """
+    Absorb a matrix to a tensor at desinated bond
+    :param tensor: a tensor
+    :param mat:  a matrix
+    :param bond:  bond the matrix contracted with
+    :return:  tensor after absorb the matrix
+    Example:
+        >>>T = np.array([[[1, 2], [2, 3]],[[3, 4], [4, 5]]])
+        >>>M = np.array([[1, 3], [2, 4]])
+        >>>print(absorb_matrix2tensor(T, M, 2))
+          [[[ 5 11]
+            [ 8 18]]
+
+           [[11 25]
+            [14 32]]]
+    """
     # generally, recommend to use the function 'absorb_matrices2tensor'
     # contract the 1st bond of mat with tensor
     s = np.array(tensor.shape)
@@ -352,6 +368,21 @@ def absorb_matrix2tensor(tensor, mat, bond):
 
 
 def absorb_matrices2tensor_full_fast(tensor, mats):
+    """
+    Absorb tensor with matrices on all bonds
+    :param tensor: a tensor
+    :param mats: matrices to contracted on all bonds
+    :return: tensor after absorb matrices
+    Example:
+        >>>T = np.array([[[1, 1], [1, 1]],[[1, 1], [1, 1]]])
+        >>>M = [np.array([[1, 2], [2, 3]]), np.array([[2, 3], [3, 4]]), np.array([[3, 4], [4, 5]])]
+        >>>print(absorb_matrices2tensor_full_fast(T, M))
+          [[[105 135]
+           [147 189]]
+
+           [[175 225]
+            [245 315]]]
+    """
     # generally, recommend to use the function 'absorb_matrices2tensor'
     # each bond will have a matrix to contract with
     # the matrices must be in the right order
@@ -377,6 +408,19 @@ def absorb_matrices2tensor_full_fast(tensor, mats):
 
 
 def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
+    """
+    Absorb matrices to tensors on certain bonds
+    :param tensor:  a tensor
+    :param mats:  matrices
+    :param bonds:  which bonds of tensor to absorb matrices, default by from 0 to n
+    :param mat_bond:  which bond of matrices to contract to tensor, default as 0 bond
+    :return: tensor absorbed matrices
+    Example:
+        >>>T = np.array([[[1, 1], [1, 1]],[[1, 1], [1, 1]]])
+        >>>M = [np.array([[1, 2], [2, 3]]), np.array([[2, 3], [3, 4]])]
+        >>>print(absorb_matrices2tensor(T, M))
+
+    """
     # default: contract the 1st bond of mat with tensor
     nm = len(mats)  # number of matrices to be contracted
     if is_debug:
@@ -403,6 +447,26 @@ def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
 
 
 def bound_vec_operator_left2right(tensor, op=np.zeros(0), v=np.zeros(0), normalize=False, symme=False):
+    """
+    Contract left boundary vector with transfer matrix of MPS
+    :param tensor:  a tensor of MPS
+    :param op:  operator on physical bonds
+    :param v:  left boundary
+    :param normalize:  if normalized the outcome vector
+    :param symme:  if symmertrized the outcome vector
+    :return: the outcome vector
+    Notes: 1.if v leaves empty, this function will use identity as default
+    Examples:
+        >>>T = np.array([[[1, 2, 1], [2, 1, 2]], [[2, 0, 2], [1, 3, 1]], [[3, 1, 0], [2, 2, 1]]])
+        >>>print(bound_vec_operator_left2right(T))
+          [[23 14 12]
+           [14 19  9]
+           [12  9 11]]
+        >>>print(bound_vec_operator_left2right(T, v = np.array([[1, 1, 1], [1, 2, 1], [2, 2, 1]])))
+          [[81 65 58]
+           [60 64 45]
+           [46 40 33]]
+    """
     s = tensor.shape
     if op.size != 0:  # deal with the operator
         tensor1 = absorb_matrix2tensor(tensor, op.T, 1)
@@ -428,6 +492,26 @@ def bound_vec_operator_left2right(tensor, op=np.zeros(0), v=np.zeros(0), normali
 
 
 def bound_vec_operator_right2left(tensor, op=np.zeros(0), v=np.zeros(0), normalize=False, symme=False):
+    """
+    Contract right boundary vector with transfer matrix of MPS
+    :param tensor:  a tensor of MPS
+    :param op:  operator on physical bonds
+    :param v:  left boundary
+    :param normalize:  if normalized the outcome vector
+    :param symme:  if symmertrized the outcome vector
+    :return: the outcome vector
+    Notes: 1.if v leaves empty, this function will use identity as default
+    Examples:
+        >>>T = np.array([[[1, 2, 1], [2, 1, 2]], [[2, 0, 2], [1, 3, 1]], [[3, 1, 0], [2, 2, 1]]])
+        >>>print(bound_vec_operator_right2left(T))
+          [[15 11 13]
+           [11 19 15]
+           [13 15 19]]
+        >>>print(bound_vec_operator_right2left(T, v = np.array([[1, 1, 1], [1, 2, 1], [2, 2, 1]])))
+          [[55 54 57]
+           [53 58 59]
+           [48 51 50]]
+    """
     s = tensor.shape
     if op.size != 0:  # deal with the operator
         tensor1 = absorb_matrix2tensor(tensor, op.T, 1)
@@ -453,6 +537,23 @@ def bound_vec_operator_right2left(tensor, op=np.zeros(0), v=np.zeros(0), normali
 
 
 def transfer_matrix_mps(tensor):
+    """
+    Obtain a transfer matrix of MPS
+    :param tensor:  tensor of MPS
+    :return:  transfer matrix
+    Example:
+        >>>T = np.array([[[1, 2, 1], [2, 1, 2]], [[2, 0, 2], [1, 3, 1]], [[3, 1, 0], [2, 2, 1]]])
+        >>>print(transfer_matrix_mps(T))
+         [[ 5  4  5  4  5  4  5  4  5]
+          [ 4  6  4  5  3  5  4  6  4]
+          [ 7  5  2  8  4  1  7  5  2]
+          [ 4  5  4  6  3  6  4  5  4]
+          [ 5  3  5  3  9  3  5  3  5]
+          [ 8  4  1  6  6  3  8  4  1]
+          [ 7  8  7  5  4  5  2  1  2]
+          [ 8  6  8  4  6  4  1  3  1]
+          [13  7  2  7  5  2  2  2  1]]
+    """
     s = tensor.shape
     tmp = tensor.transpose(0, 2, 1).reshape(s[0]*s[2], s[1])
     tm = tmp.conj().dot(tmp.T).reshape(s[0], s[2], s[0], s[2])
