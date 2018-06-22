@@ -434,7 +434,7 @@ def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
         if mat_bond[i, 0] == 1:
             mats[i] = mats[i].T
     # check if full_fast function can be used
-    if np.array_equiv(np.sort(bonds), np.arange(0, nm)):
+    if np.array_equiv(np.sort(bonds), np.arange(0, tensor.ndim)):
         order = np.argsort(bonds)
         mats = sort_list(mats, order)
         # this full_fast function can be used when each bond has a matrix which are arranged in the correct order
@@ -578,11 +578,11 @@ def normalize_tensor(tensor, if_flatten=False):
             return tensor/norm, norm
 
 
-def entanglement_entropy(lm, tol=1e-15):
-    lm = np.sort(lm.reshape(-1, 1))
+def entanglement_entropy(lm, tol=1e-20):
+    lm = np.sort(lm.reshape(-1, ))
     lm = lm[::-1]
     ind = arg_find_array(lm > tol, 1, 'last')
-    lm = lm[:ind + 1, 0]
+    lm = lm[:ind + 1]
     ent = -2*(lm**2).T.dot(np.log(lm))
     return ent
 
@@ -591,7 +591,9 @@ def is_identity_by_norm(mat, tol=1e-20):
     c = mat[0, 0]
     s = mat.shape
     is_id = True
-    if abs(c) < tol or mat.ndim != 2 or s[0] != s[1]:
+    if abs(c) < tol or mat.ndim != 2:
+        is_id = False
+    elif s[0] != s[1]:
         is_id = False
     else:
         mat = mat/mat[0, 0] - np.eye(mat.shape[0])
@@ -606,19 +608,21 @@ def is_identity(mat, tol=1e-20, sample_t=10):
     # if not, return False
     c = mat[0, 0]
     s = mat.shape
-    if abs(c) < tol or mat.ndim != 2 or s[0] != s[1]:
+    if abs(c) < tol or mat.ndim != 2:
+        is_id = False
+    elif s[0] != s[1]:
         is_id = False
     else:
         is_id = True
         sample_t1 = min(sample_t, s[0])
-        ind = np.random.permutation(s[0])[:sample_t1]
+        ind = np.random.permutation(s[0]-1)[:sample_t1]+1
         for i in ind:
             if abs(mat[i, i] - mat[i-1, i-1]) > tol:
                 is_id = False
                 break
         if is_id:
-            ind1 = np.random.permutation(s[0])[:sample_t1]
-            ind2 = np.random.permutation(s[0])[:sample_t1]
+            ind1 = np.random.permutation(s[0]-1)[:sample_t1]+1
+            ind2 = np.random.permutation(s[0]-1)[:sample_t1]+1
             for i1 in ind1:
                 for i2 in ind2:
                     if i1 != i2 and abs(mat[i1, i2]) > tol:
