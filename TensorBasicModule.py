@@ -419,6 +419,11 @@ def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
         >>>T = np.array([[[1, 1], [1, 1]],[[1, 1], [1, 1]]])
         >>>M = [np.array([[1, 2], [2, 3]]), np.array([[2, 3], [3, 4]])]
         >>>print(absorb_matrices2tensor(T, M))
+          [[[15 15]
+            [21 21]]
+
+           [[25 25]
+            [35 35]]]
 
     """
     # default: contract the 1st bond of mat with tensor
@@ -562,6 +567,21 @@ def transfer_matrix_mps(tensor):
 
 
 def normalize_tensor(tensor, if_flatten=False):
+    """
+    Normalize a tensor
+    :param tensor:  a tensor
+    :param if_flatten:  if flat the tensor into a vector
+    :return:  a tensor or a vector, and the norm
+    Example:
+        >>>T = np.array([[[1, 1], [1, 1]],[[1, 1], [1, 1]]])
+        >>>print(normalize_tensor(T))
+          (array([[[0.35355339, 0.35355339],
+                  [0.35355339, 0.35355339]],
+
+                 [[0.35355339, 0.35355339],
+                  [0.35355339, 0.35355339]]]), 2.8284271247461903)
+
+    """
     v = tensor.reshape(-1, )
     norm = np.linalg.norm(v)
     if norm < 1e-30:
@@ -579,6 +599,15 @@ def normalize_tensor(tensor, if_flatten=False):
 
 
 def entanglement_entropy(lm, tol=1e-20):
+    """
+    Calculate the engtanglement entropy from spectrum lambda
+    :param lm:  a spectrum
+    :param tol:   minimal set of values.
+    :return:  entanglement entropy
+        >>>lm = np.array([2, 1, 0.5, 0.3, 0])
+        >>>print(entanglement_entropy(lm))
+          -4.981888749420921
+    """
     lm = np.sort(lm.reshape(-1, ))
     lm = lm[::-1]
     ind = arg_find_array(lm > tol, 1, 'last')
@@ -588,6 +617,12 @@ def entanglement_entropy(lm, tol=1e-20):
 
 
 def is_identity_by_norm(mat, tol=1e-20):
+    """
+    Check if matrix is identity matrix by compare the norm
+    :param mat:  matrix
+    :param tol:  error tolerant
+    :return:   true or false
+    """
     c = mat[0, 0]
     s = mat.shape
     is_id = True
@@ -604,6 +639,13 @@ def is_identity_by_norm(mat, tol=1e-20):
 
 
 def is_identity(mat, tol=1e-20, sample_t=10):
+    """
+    Check if matrix is identity matrix by sampling
+    :param mat:  matrix
+    :param tol:  error tolerant
+    :param sample_t:  sample time
+    :return:  true or false
+    """
     # if mat is an identity, return c with mat = c*I
     # if not, return False
     c = mat[0, 0]
@@ -636,6 +678,12 @@ def is_identity(mat, tol=1e-20, sample_t=10):
 
 
 def is_zero(mat, tol=1e-20):
+    """
+    Check if matrix are zero matrix
+    :param mat:  matrix
+    :param tol:  error tolerant
+    :return:  True or False
+    """
     norm = np.prod(abs(mat) < tol)
     return norm
 
@@ -650,6 +698,23 @@ def check_orthogonality(tensor, ind0=0, ind1=1, tol=1e-20):
 
 
 def sort_vectors(mat, order, way='column'):
+    """
+    Sort vectors in a matrix at designated order
+    :param mat: matrix
+    :param order: designated order
+    :param way: sort column vectors or row vectors
+    :return: sorted matrix
+    Example:
+        >>>M = np.array([[1, 2, 3],[4, 5, 6], [7, 8, 9]])
+        >>>print(sort_vectors(M, (2, 0, 1)))
+          [[3. 1. 2.]
+           [6. 4. 5.]
+           [9. 7. 8.]]
+        >>>print(sort_vectors(M, (2, 0, 1), 'row'))
+          [[7. 8. 9.]
+           [1. 2. 3.]
+           [4. 5. 6.]]
+    """
     mat1 = np.zeros(mat.shape)
     if way == 'row':
         nv = mat.shape[0]
