@@ -3,6 +3,27 @@ import HamiltonianModule as hm
 from BasicFunctionsSJR import print_error, print_options, print_dict
 
 
+def generate_parameters_infinite_dmrg():
+    para = dict()
+    para['jxy'] = 1
+    para['jz'] = 1
+    para['hx'] = 0
+    para['hz'] = 0
+
+    para['form'] = 'center_ort'
+    para['chi'] = 16  # Virtual bond dimension cut-off
+    para['d'] = 4  # Physical bond dimension (2-sites in one tensor)
+    para['sweep_time'] = 200  # sweep time
+    # Fixed parameters
+    para['tau'] = 1e-3  # shift to ensure the GS energy has the largest magnitude
+    para['eigs_tol'] = 1e-3
+    para['break_tol'] = 1e-9  # tolerance for breaking the loop
+    para['is_real'] = True
+    para['dt_ob'] = 2  # in how many sweeps, observe to check the convergence
+    para['data_path'] = '.\\data_idmrg\\'
+    return para
+
+
 def generate_parameters_dmrg():
     lattice = 'arbitrary'
 

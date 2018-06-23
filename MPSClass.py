@@ -830,6 +830,7 @@ class MpsOpenBoundaryClass(MpsBasic):
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
 
 
+# ========================================================================
 # class for infinite-size MPS
 # relevant algorithms: iDMRG, iTEBD, AOP (1D)
 class MpsInfinite(MpsBasic):
@@ -849,8 +850,11 @@ class MpsInfinite(MpsBasic):
             |
             2
     """
-    def __init__(self, form, n_tensor, d, chi, dd=-1, spin='half', mpo=None, way='qr', operators=None,
+    def __init__(self, form, d, chi, n_tensor=2, spin='half', way='qr', operators=None,
                  debug=False):
+        # form = 'center_ort': central orthogonal form; self.n_tensor fixed to 3 and self.lm[n] = zeros(0)
+        # form = 'translation_invariant': central orthogonal form; self.n_tensor is flexible, self.lm[n]
+        # must be initialized
         MpsBasic.__init__(self)
         self.spin = spin
         self.n_tensor = n_tensor
@@ -862,13 +866,7 @@ class MpsInfinite(MpsBasic):
         self.is_canonical = False
         self.d = d
         self.chi = chi
-        if dd < 0:
-            self.dd = self.d**2
-        else:
-            self.dd = dd
 
-        # 'center_ort': central orthogonal form, with self.n_tensor fixed to 3 and self.lm[n] = zeros(0)
-        # 'translation_invariant': self.n_tensor is flexible, self.lm[n] must be initialized
         self.form = form
         self.initialize_imps()
 
@@ -879,10 +877,6 @@ class MpsInfinite(MpsBasic):
         else:
             self.op = operators
 
-        if mpo is None:
-            self.mpo = empty_list(self.n_tensor, np.zeros(0))
-        else:
-            self.mpo = mpo
         self._debug = debug
 
     def initialize_imps(self):
@@ -938,3 +932,10 @@ class MpsInfinite(MpsBasic):
     def update_central_tensor(self, tensor):
         h = self.effective_hamiltonian(tensor)
         self.mps[1] = la.eigs(h, 1, v0=self.mps[1].reshape(-1, 1))[1].reshape(self.chi, self.d, self.chi)
+
+    def observe_energy(self, h):
+        if self.form is 'center_ort':
+            rho = self.mps[1].transpose(1, 0, 2).reshape(self.d, self.chi*self.chi)
+            rho = rho.conj().dot(rho.T)
+            energy = np.trace(rho.dot(h))
+            return energy

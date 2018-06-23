@@ -1,5 +1,7 @@
 # include the functions that relate to Hamiltonian's and gates
 import numpy as np
+import scipy.sparse.linalg as la
+from TensorBasicModule import cont
 
 
 def spin_operators(spin):
@@ -23,11 +25,41 @@ def spin_operators(spin):
 
 
 def hamiltonian_heisenberg(jx, jy, jz, hx, hz):
-    op = spin_operators(0.5)
+    op = spin_operators('half')
     hamilt = jx*np.kron(op['sx'], op['sx']) + jy*np.kron(op['sy'], op['sy']).real + jz*np.kron(op['sz'], op['sz'])
     hamilt += hx*(np.kron(np.eye(2), op['sx']) + np.kron(op['sx'], np.eye(2)))
     hamilt += hz*(np.kron(np.eye(2), op['sz']) + np.kron(op['sz'], np.eye(2)))
     return hamilt
+
+
+def hamiltonian2cell_tensor(h, tau, way='shift'):
+    # h has to be a two-body hamiltonian at least
+    """ The indexes of the out put tensor are ordered as:
+        1
+        |
+    0 - T - 3
+        |
+        2
+    :param h:
+    :param tau:
+    :param way:
+    :return:
+    """
+    dd = h.shape[0]
+    d = round(dd**0.5)
+    if way is 'shift':
+        h = np.eye(dd) - tau*h
+    else:
+        h = la.expm(-tau*h)
+    h = h.reshape(d, d, d, d)
+    tmp = h.transpose(1, 3, 2, 4).reshape(dd, dd)
+    vl, lm, vr = np.linalg.svd(tmp)
+    lm = np.diag(lm**0.5)
+    vl = vl.dot(lm).reshape(d, d, dd)
+    vr = lm.dot(vr).reshape(dd, d, d)
+    tensor = cont([h, vr, vl], [[1, 2, -4, -5], [-2, 1, -1], [-6, -3, 2]])
+    tensor = tensor.reshape(dd, dd, dd, dd)
+    return tensor
 
 
 def interactions_full_connection_two_body(l):

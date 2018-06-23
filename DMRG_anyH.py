@@ -1,7 +1,7 @@
 from multiprocessing.dummy import Pool as ThreadPool
-from MPSClass import MpsOpenBoundaryClass as Mob
 from BasicFunctionsSJR import arg_find_array
 from TensorBasicModule import sort_vectors
+from HamiltonianModule import hamiltonian_heisenberg, hamiltonian2cell_tensor
 import Parameters as pm
 import numpy as np
 import time
@@ -13,6 +13,7 @@ is_save_op = True
 
 
 def dmrg_finite_size(para=None):
+    from MPSClass import MpsOpenBoundaryClass as Mob
     t_start = time.time()
     info = dict()
     print('Preparation the parameters and MPS')
@@ -85,6 +86,33 @@ def dmrg_finite_size(para=None):
     if A._is_parallel:
         par_pool.close()
     return ob, A, info, para
+
+
+def dmrg_infinite_size(para=None):
+    from MPSClass import MpsInfinite as Minf
+    t_start = time.time()
+    info = dict()
+    print('Preparation the parameters and MPS')
+    if para is None:
+        para = pm.generate_parameters_infinite_dmrg()
+
+    hamilt = hamiltonian_heisenberg(para['jxy'], para['jxy'], para['jz'], para['hx']/2, para['hz']/2)
+    tensor = hamiltonian2cell_tensor(hamilt)
+    A = Minf(para['form'], para['d'], para['chi'])
+
+    e0 = 0
+    for t in range(0, para['sweep_time']):
+        A.update_left_env(tensor)
+        A.update_right_env(tensor)
+        A.update_central_tensor(tensor)
+        if t % para['dt_ob'] == 0:
+            e1 = A.observe_energy(hamilt)
+            if abs(e0-e1) > para['break_tol']:
+                e0 = e1
+            else:
+                break
+
+    info['t_cost'] = time.time() - t_start
 
 
 # ======================================================
