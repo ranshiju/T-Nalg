@@ -689,6 +689,17 @@ def is_zero(mat, tol=1e-20):
 
 
 def check_orthogonality(tensor, ind0, tol=1e-20):
+    """
+    Check a tensor if it's orthogonal on one index or some indexes
+    :param tensor:  a tensor
+    :param ind0:  indexes
+    :param tol:  error tolerant of orthogonality
+    :return:  True or False
+    Example:
+        >>>T = np.array([[[1, 1], [1, 1]],[[1, 1], [1, 1]]])
+        >>>print(check_orthogonality(T, [2]))
+          False
+    """
     s = list(tensor.shape)
     ind1 = list(range(0, len(s)))
     dim0 = 1
