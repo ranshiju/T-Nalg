@@ -688,11 +688,18 @@ def is_zero(mat, tol=1e-20):
     return norm
 
 
-def check_orthogonality(tensor, ind0=0, ind1=1, tol=1e-20):
-    s = np.array(tensor.shape)
-    dim1 = np.prod(s[ind0])
-    dim2 = np.prod(s[ind1])
-    tensor = tensor.transpose(np.hstack((ind0, ind1))).reshape(dim1, dim2)
+def check_orthogonality(tensor, ind0, tol=1e-20):
+    s = list(tensor.shape)
+    ind1 = list(range(0, len(s)))
+    dim0 = 1
+    dim1 = 1
+    for n in range(0, len(ind0)):
+        ind1.remove(ind0[n])
+        dim0 *= s[ind0[n]]
+    for n in range(0, len(ind1)):
+        dim1 *= s[ind1[n]]
+
+    tensor = tensor.transpose(ind0 + ind1).reshape(dim0, dim1)
     rm = tensor.conj().dot(tensor.T)
     return is_identity(rm, tol=tol)
 
