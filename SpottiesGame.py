@@ -43,7 +43,7 @@ class GameBasic:
         movement = np.nonzero(neighbor == 0)
         rand_pos = np.random.randint(0, len(movement[0]), 1)
         movement = movement[rand_pos]
-        new_pos = find_position_from_movement(self.spotties[ns].position, movement)
+        new_pos = find_position_from_movement(self.spotties[nth].position, movement)
         new = spotty_copy(self.spotties[nth])
         new.enter_map_position(new_pos)
         self.universe.map[new_pos[0], new_pos[1]] = self.spotties[nth].tribe
@@ -80,7 +80,15 @@ class SpottiesGameV0(GameBasic):
             self.spotty_split_random(nth)
         else:
             env = self.universe.read_neighbour(self.spotties[nth], 2)
-            output = intel(env)
+            decision = intel(env)
+            self.spotty_move(nth, decision)
+            self.spotties[nth].age += 1
+            if self.if_gain_energy(env, self.cond_gain_energy):
+                self.spotties[nth].energy += 1
+
+    @ staticmethod
+    def if_gain_energy(env2, cond_energy):
+        return not (sum(env2 == 0) < cond_energy)
 
 
 def game_v0():
@@ -101,8 +109,8 @@ def game_v0():
     intel = bfr.load_pr('.\\intels\\linear_intel.pr', 'intel')
 
     for t in range(0, time):
-        for n in range(0, game.population[0]):
-            pass
+        for n in range(game.population[0]-1, -1, -1):
+            game.update_one_spotty(n, intel)
 
 
 def spotty_copy(spotty):
