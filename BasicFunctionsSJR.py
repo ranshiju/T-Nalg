@@ -60,8 +60,9 @@ def load_pr(path_file, names=None):
         >>> save_pr('.\\test', 'ok.pr', [x, y, z], ['name1', 'name2', 'name3'])
         >>> A = load_pr('.\\test\\ok.pr')
           A = {'name1': 1, 'name2': 'good'}
-        >>> A = load_pr('\\test\\ok.pr', ['name2', 'name3'])
-          A = {'name2': 'a', 'name3': [1, 2, 3] }
+        >>> name2, name3 = load_pr('\\test\\ok.pr', ['y', 'z'])
+          y = 'good'
+          z = [1, 2, 3]
     """
     if os.path.isfile(path_file):
         s = open(path_file, 'rb')

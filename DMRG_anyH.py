@@ -88,11 +88,13 @@ def dmrg_finite_size(para=None):
     return ob, A, info, para
 
 
+# ==========================================================================
+# Infinite DMRG (one-site)
 def dmrg_infinite_size(para=None):
     from MPSClass import MpsInfinite as Minf
     t_start = time.time()
     info = dict()
-    print('Preparation the parameters and MPS')
+    print('Start iDMRG calculation')
     if para is None:
         para = pm.generate_parameters_infinite_dmrg()
 
@@ -107,13 +109,16 @@ def dmrg_infinite_size(para=None):
         A.update_central_tensor(tensor)
         if t % para['dt_ob'] == 0:
             e1 = A.observe_energy(hamilt)
-            if abs(e0-e1) > para['break_tol']:
+            de = abs(e0-e1)
+            if de > para['break_tol']:
                 e0 = e1
             else:
+                print('Converged with de = %g' % de)
                 break
-
+        if t == para['sweep_time']:
+            print('Not sufficiently converged with de = %g' % de)
     info['t_cost'] = time.time() - t_start
-
+    return A
 
 # ======================================================
 def positions_set2array(pos_set):
