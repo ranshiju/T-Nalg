@@ -92,25 +92,28 @@ class SpottiesGameV0(GameBasic):
 
 
 def game_v0():
+    # iteration time
     time = 200
-
+    # map size
     lx = 9
     ly = 9
-
+    # properties of spotties
     ini_pos = [4, 4]
-    max_age = 12
+    max_age = 15
     split_energy = 5
     cond_gain_energy = 3
-
+    # initial game
     game = SpottiesGameV0(cond_gain_energy, lx, ly, max_age, split_energy)
-    game.add_spotty_positions(ini_pos)
+    info = {'tribe': 1}
+    game.add_spotty_positions(info, ini_pos)
 
     save_intel_linear_random(8, 5)
-    intel = bfr.load_pr('.\\intels\\linear_intel.pr', 'intel')
+    intel = [bfr.load_pr('.\\intels\\linear_intel.pr', 'intel')]
 
     for t in range(0, time):
         for n in range(game.population[0]-1, -1, -1):
-            game.update_one_spotty(n, intel)
+            game.update_one_spotty(n, intel[game.spotties[n].tribe-1])
+        # show map
 
 
 def spotty_copy(spotty):
