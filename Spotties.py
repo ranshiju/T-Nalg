@@ -6,10 +6,10 @@ _is_debug = False
 
 class Spotty:
 
-    def __init__(self, tribe, max_age, split_energy):
+    def __init__(self, info, max_age, split_energy):
         self.age = 0
         self.max_age = max_age
-        self.tribe = tribe
+        self.info = info
         self.position = [-1, -1]
         self.energy = 0
         self.split_energy = split_energy
