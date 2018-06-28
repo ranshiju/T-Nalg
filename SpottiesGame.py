@@ -39,8 +39,8 @@ class GameBasic:
 
     def spotty_split_random(self, nth):
         # split the nth spotty
-        neighbor = self.universe.read_neighbour(self.spotties[nth], 1)
-        movement = np.nonzero(neighbor == 0)
+        neighbor = self.universe.read_map(self.spotties[nth], 1)
+        movement = np.nonzero(neighbor['tribe'] == 0)
         rand_pos = np.random.randint(0, len(movement[0]), 1)
         movement = movement[rand_pos]
         new_pos = find_position_from_movement(self.spotties[nth].position, movement)
@@ -79,8 +79,8 @@ class SpottiesGameV0(GameBasic):
         elif self.spotties[nth].energy == self.split_energy:
             self.spotty_split_random(nth)
         else:
-            env = self.universe.read_neighbour(self.spotties[nth], 2)
-            decision = intel(env)
+            env = self.universe.read_map(self.spotties[nth], 2)
+            decision = intel(env['tribe'])
             self.spotty_move(nth, decision)
             self.spotties[nth].age += 1
             if self.if_gain_energy(env, self.cond_gain_energy):
