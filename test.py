@@ -3,8 +3,15 @@ import TensorBasicModule as tbm
 import BasicFunctionsSJR as bf
 
 
-x = np.random.random()
-print(x)
+x = dict()
+x['a1'] = 1
+x['a2'] = 2
+y = dict()
+for p in x:
+    exec('y[\'' + p + '\'] = ' + str(x[p]))
+
+print(type(y['a1']))
+
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]
 # a = tbm.CONT(tensors, indexes)

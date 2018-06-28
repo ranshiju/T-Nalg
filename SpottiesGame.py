@@ -19,9 +19,9 @@ class GameBasic:
         if self.population.__len__() < info['tribe'] + 0.5:
             self.population.append(0)
         for n in range(0, new_pop):
-            self.spotties.append(Spotty(info['tribe'], self.max_age, self.split_energy))
-            pos = self.spotties[n + self.population[0]].enter_map_random(self.universe.map)
-            self.universe.map[pos[0], pos[1]] = self.spotties[n + self.population[0]].tribe
+            self.spotties.append(Spotty(info, self.max_age, self.split_energy))
+            pos = self.spotties[n + self.population[0]].enter_map_random(self.universe.map_tribe)
+            self.universe.map_tribe[pos[0], pos[1]] = info['tribe']
         self.population[info['tribe']] += new_pop
         self.population[0] += new_pop
 
@@ -30,10 +30,9 @@ class GameBasic:
             self.population.append(0)
         new_pop = len(positions)
         for n in range(0, new_pop):
-            self.spotties.append(Spotty(info['tribe'], self.max_age, self.split_energy))
+            self.spotties.append(Spotty(info, self.max_age, self.split_energy))
             self.spotties[n + self.population[0]].enter_map_position(positions[n])
-            self.universe.map[positions[n][0], positions[n][1]] = \
-                self.spotties[n + self.population[0]].tribe
+            self.universe.map_tribe[positions[n][0], positions[n][1]] = info['tribe']
         self.population[info['tribe']] += new_pop
         self.population[0] += new_pop
 
@@ -46,9 +45,9 @@ class GameBasic:
         new_pos = find_position_from_movement(self.spotties[nth].position, movement)
         new = spotty_copy(self.spotties[nth])
         new.enter_map_position(new_pos)
-        self.universe.map[new_pos[0], new_pos[1]] = self.spotties[nth].tribe
+        self.universe.map_tribe[new_pos[0], new_pos[1]] = self.spotties[nth].info['tribe']
         self.spotties.append(new)
-        self.population[self.spotties[nth].tribe] += 1
+        self.population[self.spotties[nth].info['tribe']] += 1
         self.population[0] += 1
         self.spotties[nth].energy = 0
 
@@ -56,12 +55,12 @@ class GameBasic:
         pos0 = self.spotties[nth].position
         self.spotties[nth].move(decision)
         pos1 = self.spotties[nth].position
-        self.universe.map[pos0[0], pos0[1]] = 0
-        self.universe.map[pos1[0], pos1[1]] = self.spotties[nth].tribe
+        self.universe.map_tribe[pos0[0], pos0[1]] = 0
+        self.universe.map_tribe[pos1[0], pos1[1]] = self.spotties[nth].info['tribe']
 
     def spotty_die(self, nth):
         pos = self.spotties[nth].position
-        self.universe.map[pos[0], pos[1]] = 0
+        self.universe.map_tribe[pos[0], pos[1]] = 0
         self.spotties.__delitem__(nth)
 
 
@@ -107,17 +106,17 @@ def game_v0():
     info = {'tribe': 1}
     game.add_spotty_positions(info, ini_pos)
 
-    save_intel_linear_random(8, 5)
-    intel = [bfr.load_pr('.\\intels\\linear_intel.pr', 'intel')]
+    save_intel_linear_random(8, 5, 'linear_intel.pr')
+    intel = [bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')]
 
     for t in range(0, time):
         for n in range(game.population[0]-1, -1, -1):
-            game.update_one_spotty(n, intel[game.spotties[n].tribe-1])
+            game.update_one_spotty(n, intel[game.spotties[n].info['tribe']-1])
         # show map
 
 
 def spotty_copy(spotty):
-    new = Spotty(spotty.tribe, spotty.max_age, spotty.split_energy)
+    new = Spotty(spotty.info, spotty.max_age, spotty.split_energy)
     return new
 
 
