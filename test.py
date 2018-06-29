@@ -3,14 +3,10 @@ import TensorBasicModule as tbm
 import BasicFunctionsSJR as bfr
 
 
-b = 20
+x = np.eye(4)
+print(np.count_nonzero(x==0))
 
 
-def plus(a):
-    return a + b
-
-
-bfr.save_pr('.', 'test.pr', [plus], ['plus'])
 
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]

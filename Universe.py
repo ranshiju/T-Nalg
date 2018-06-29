@@ -61,7 +61,7 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
     # 0: origin, 1: east, 2: south, 3: west, 4:north
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
-    nneighbour = np.zeros(cont, dtype=int)
+    nneighbour = np.zeros((cont, ), dtype=int)
     nneighbour[0] = spotty.info['tribe']
     if pos_x == 0:
         nneighbour[3] = -1
@@ -84,7 +84,7 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
 
 def read_neighbour(the_map, the_size, spotty, length=2):
     nneighbour = read_nearest_neighbour(the_map, the_size, spotty)
-    neighbour = np.zeros(5)
+    neighbour = np.zeros((1, 5))
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
     if length == 1:
