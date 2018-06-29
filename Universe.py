@@ -39,20 +39,21 @@ class Universe:
         if is_figure:
             self.figure = self.plot_universe()
 
-    def plot_universe(self, _is_show=True):
-        mpy.clf()
+    def plot_universe(self, _show_time=1, _is_show=True):
+        mpy.ion()
+        mpy.show()
         figure = plot_square_map(self.size[0], self.size[1])
         pos = np.nonzero(self.map['tribe'])
         for i in range(0, len(pos[1])):
             if 'nation' in self.map:
                 map_color = self.map['nation'] - 1
             else:
-                map_color = np.zeros([self.size[0], self.size[1]])
+                map_color = np.zeros([self.size[0], self.size[1]], dtype=int)
             figure = mpy.plot(pos[0][i], pos[1][i], color=list_color()[map_color[pos[0][i], pos[1][i]]],
                               marker=list_marker()[self.map['tribe'][pos[0][i], pos[1][i]]])
         if _is_show:
-            mpy.show(figure)
-            time.sleep(0.1)
+            mpy.draw()
+            mpy.pause(_show_time)
         return figure
 
 
