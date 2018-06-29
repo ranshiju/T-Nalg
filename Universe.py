@@ -39,7 +39,7 @@ class Universe:
         if is_figure:
             self.figure = self.plot_universe()
 
-    def plot_universe(self, _is_show=True):
+    def plot_universe(self, _show_time=1, _is_show=True):
         mpy.ion()
         mpy.show()
         figure = plot_square_map(self.size[0], self.size[1])
@@ -53,7 +53,7 @@ class Universe:
                               marker=list_marker()[self.map['tribe'][pos[0][i], pos[1][i]]])
         if _is_show:
             mpy.draw()
-            mpy.pause(1)
+            mpy.pause(_show_time)
         return figure
 
 
