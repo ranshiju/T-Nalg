@@ -56,27 +56,27 @@ class Universe:
         return figure
 
 
-def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
+def read_nearest_neighbour(the_map, the_size, spotty, cont=4):
     # 0: origin, 1: east, 2: south, 3: west, 4:north
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
     nneighbour = np.zeros(cont, dtype=int)
     if pos_x == 0:
-        nneighbour[3] = -1
-    else:
-        nneighbour[3] = the_map[pos_x - 1, pos_y]
-    if pos_x == the_size[0] - 1:
-        nneighbour[1] = -1
-    else:
-        nneighbour[1] = the_map[pos_x + 1, pos_y]
-    if pos_y == 0:
-        nneighbour[4] = -1
-    else:
-        nneighbour[4] = the_map[pos_x, pos_y - 1]
-    if pos_y == the_size[1] - 1:
         nneighbour[2] = -1
     else:
-        nneighbour[2] = the_map[pos_x, pos_y + 1]
+        nneighbour[2] = the_map[pos_x - 1, pos_y]
+    if pos_x == the_size[0] - 1:
+        nneighbour[0] = -1
+    else:
+        nneighbour[0] = the_map[pos_x + 1, pos_y]
+    if pos_y == 0:
+        nneighbour[3] = -1
+    else:
+        nneighbour[3] = the_map[pos_x, pos_y - 1]
+    if pos_y == the_size[1] - 1:
+        nneighbour[1] = -1
+    else:
+        nneighbour[1] = the_map[pos_x, pos_y + 1]
     return nneighbour
 
 
@@ -90,30 +90,30 @@ def read_neighbour(the_map, the_size, spotty, length=2):
     elif length == 2:
         neighbour = np.hstack((nneighbour, -np.ones(4, dtype=int)))
         if pos_x == 0 and pos_y == 0:
-            neighbour[6] = the_map[pos_x + 1, pos_y + 1]
+            neighbour[5] = the_map[pos_x + 1, pos_y + 1]
         elif pos_x == 0 and pos_y == the_size[1] - 1:
-            neighbour[5] = the_map[pos_x + 1, pos_y - 1]
+            neighbour[4] = the_map[pos_x + 1, pos_y - 1]
         elif pos_x == the_size[0] - 1 and pos_y == 0:
-            neighbour[7] = the_map[pos_x - 1, pos_y + 1]
+            neighbour[6] = the_map[pos_x - 1, pos_y + 1]
         elif pos_x == the_size[0] - 1 and pos_y == the_size[1] - 1:
-            neighbour[8] = the_map[pos_x - 1, pos_y + 1]
+            neighbour[7] = the_map[pos_x - 1, pos_y + 1]
         elif pos_x == 0:
             neighbour[6] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[5] = the_map[pos_x + 1, pos_y - 1]
+            neighbour[4] = the_map[pos_x + 1, pos_y - 1]
         elif pos_x == the_size[0] - 1:
+            neighbour[6] = the_map[pos_x - 1, pos_y + 1]
             neighbour[7] = the_map[pos_x - 1, pos_y + 1]
-            neighbour[8] = the_map[pos_x - 1, pos_y + 1]
         elif pos_y == 0:
-            neighbour[6] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[7] = the_map[pos_x - 1, pos_y + 1]
+            neighbour[5] = the_map[pos_x + 1, pos_y + 1]
+            neighbour[6] = the_map[pos_x - 1, pos_y + 1]
         elif pos_y == the_size[1] - 1:
-            neighbour[5] = the_map[pos_x + 1, pos_y - 1]
-            neighbour[8] = the_map[pos_x - 1, pos_y - 1]
+            neighbour[4] = the_map[pos_x + 1, pos_y - 1]
+            neighbour[7] = the_map[pos_x - 1, pos_y - 1]
         else:
-            neighbour[5] = the_map[pos_x + 1, pos_y - 1]
-            neighbour[6] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[7] = the_map[pos_x - 1, pos_y + 1]
-            neighbour[8] = the_map[pos_x - 1, pos_y - 1]
+            neighbour[4] = the_map[pos_x + 1, pos_y - 1]
+            neighbour[5] = the_map[pos_x + 1, pos_y + 1]
+            neighbour[6] = the_map[pos_x - 1, pos_y + 1]
+            neighbour[7] = the_map[pos_x - 1, pos_y - 1]
     return neighbour
 
 
