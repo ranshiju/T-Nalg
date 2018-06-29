@@ -2,7 +2,7 @@ import numpy as np
 import BasicFunctionsSJR as bfr
 from Spotties import Spotty, save_intel_linear_random, spotty_copy, find_position_from_movement, decide_by_intel
 from Universe import Universe
-_is_debug = 0
+_is_debug = True
 
 
 class GameBasic:
@@ -35,8 +35,8 @@ class GameBasic:
         # split the nth spotty
         neighbor1 = self.universe.read_map(self.spotties[nth], 1)
         movement = np.nonzero(neighbor1['tribe'] == 0)
-        rand_pos = np.random.randint(0, len(movement[0]), 1)
-        movement = movement[rand_pos]
+        rand_pos = np.random.randint(0, len(movement[1]), 1)
+        movement = movement[1][rand_pos[0]]
         new_pos = find_position_from_movement(self.spotties[nth].position, movement)
         new = spotty_copy(self.spotties[nth])
         new.enter_map_position(new_pos)
@@ -74,16 +74,19 @@ class SpottiesGameV0(GameBasic):
         self.cond_gain_energy = cond_gain_energy
 
     def update_one_spotty(self, nth, intel):
+        if _is_debug:
+            self.spotties[nth].report_yourself()
         if self.spotties[nth].age > self.max_age:
             self.spotty_die(nth)
-        elif self.spotties[nth].energy == self.split_energy:
-            self.spotty_split_random(nth)
         else:
             env = self.universe.read_map(self.spotties[nth], 2)
-            decision = decide_by_intel(intel, env['tribe'])
-            self.spotty_move(nth, decision)
             if self.if_gain_energy(env, self.cond_gain_energy):
                 self.spotties[nth].energy += 1
+            if self.spotties[nth].energy == self.split_energy:
+                self.spotty_split_random(nth)
+            else:
+                decision = decide_by_intel(intel, env['tribe'])
+                self.spotty_move(nth, decision)
 
     @ staticmethod
     def if_gain_energy(env2, cond_energy):
@@ -106,7 +109,7 @@ def game_v0():
     game = SpottiesGameV0(info, cond_gain_energy, lx, ly, max_age, split_energy)
     game.add_spotty_positions(info, ini_pos)
 
-    save_intel_linear_random(9, 5, 'linear_intel.pr')
+    save_intel_linear_random(8, 5, 'linear_intel.pr')
     intel1 = dict()
     intel1['type'] = 'linear'
     intel1['data'] = bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')
