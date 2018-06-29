@@ -1,5 +1,4 @@
 import numpy as np
-from SpottiesGame import find_position_from_movement
 import BasicFunctionsSJR as bfr
 _is_debug = False
 
@@ -27,27 +26,52 @@ class Spotty:
     def enter_map_position(self, position):
         self.position = position
 
-    def move(self, movement):
+    def move(self, decision):
         if self.position[0] > 0:
-            pos = find_position_from_movement(self.position, movement)
+            pos = find_position_from_movement(self.position, decision)
             self.position = pos
         else:
             bfr.print_error('Cannot move before entering the map')
 
 
+def decide_by_intel(intel, env):
+    if intel['type'] is 'linear':
+        return linear_intel(intel['data'], env)
+
+
 def save_intel_linear_random(input_len, output_len, file_name):
     intel = np.random.randn(input_len, output_len)
-    bfr.save_pr('.\\Intels\\', file_name, [lambda v: linear_intel(intel, v)], ['intel'])
+    bfr.save_pr('.\\Intels\\', file_name, [intel], ['intel'])
+
+
+def output2decision(output):
+    v = np.zeros((output.size - 1,))
+    v[0] = output[0]
+    for n in range(1, output.size):
+        v[n] = v[n - 1] + output[n]
+    rand = np.random.random()
+    return bfr.arg_find_array(v > rand, 1, 'first')
 
 
 def linear_intel(intel, env):
     output = env.dot(intel)
     output = output**2
     output /= np.sum(output)
-    v = np.zeros((output.size-1, ))
-    v[0] = output[0]
-    for n in range(1, output.size):
-        v[n] = v[n-1] + output[n]
-    rand = np.random.random()
-    decision = bfr.arg_find_array(v > rand, 1, 'first')
-    return decision
+    return output2decision(output)
+
+
+def spotty_copy(spotty):
+    new = Spotty(spotty.info, spotty.max_age, spotty.split_energy)
+    return new
+
+
+def find_position_from_movement(pos, movement):
+    if movement == 1:
+        pos[0] += 1
+    elif movement == 2:
+        pos[1] -= 1
+    elif movement == 3:
+        pos[0] -= 1
+    elif movement == 4:
+        pos[1] += 1
+    return pos

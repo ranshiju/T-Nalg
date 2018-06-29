@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import matplotlib.pyplot as mpy
 from SpottiesGame import find_position_from_movement
 
@@ -8,10 +9,10 @@ class Universe:
     def __init__(self, info, lx=10, ly=10, _is_debug=False):
         self._is_debug = _is_debug
         self.size = [lx, ly]
-        self.map = dict()
         self.figure = plot_square_map(lx, ly)
+        self.map = dict()
         for p in info:
-            self.map[p] = np.zeros([lx, ly], dtype=int)
+            self.map[p] = np.zeros((lx, ly), dtype=int)
 
     def read_map(self, spotty, length=2):
         neighbour = dict()
@@ -19,38 +20,39 @@ class Universe:
             neighbour[p] = read_neighbour(self.map[p], self.size, spotty, length)
         return neighbour
 
-    def move_universe(self, spotty, move):
-        self.delete_universe(spotty)
-        spotty.position = find_position_from_movement(spotty.position, move)
-        self.put_universe(spotty)
-        self.figure = self.plot_universe()
+    def move_universe(self, spotty, decision, is_figure=False):
+        self.delete_universe(spotty, is_figure)
+        spotty.position = find_position_from_movement(spotty.position, decision)
+        self.put_universe(spotty, is_figure)
+        if is_figure:
+            self.figure = self.plot_universe()
 
-    def put_universe(self, spotty):
+    def put_universe(self, spotty, is_figure=False):
         for p in spotty.info:
             self.map[p][spotty.position[0], spotty.position[1]] = spotty.info[p]
-        self.figure = self.plot_universe()
+        if is_figure:
+            self.figure = self.plot_universe()
 
-    def delete_universe(self, spotty):
+    def delete_universe(self, spotty, is_figure=False):
         for p in spotty.info:
             self.map[p][spotty.position[0], spotty.position[1]] = 0
-        self.figure = self.plot_universe()
+        if is_figure:
+            self.figure = self.plot_universe()
 
-    def plot_universe(self, _is_show=False):
+    def plot_universe(self, _is_show=True):
         mpy.clf()
         figure = plot_square_map(self.size[0], self.size[1])
-        occupation = np.zeros([self.size[0], self.size[1]])
-        for p in self.map:
-            occupation = occupation + self.map[p]
-        pos = np.nonzero(occupation)
+        pos = np.nonzero(self.map['tribe'])
         for i in range(0, len(pos[1])):
-            try:
-                map_color = self.map['nation']
-            except KeyError:
+            if 'nation' in self.map:
+                map_color = self.map['nation'] - 1
+            else:
                 map_color = np.zeros([self.size[0], self.size[1]])
             figure = mpy.plot(pos[0][i], pos[1][i], color=list_color()[map_color[pos[0][i], pos[1][i]]],
                               marker=list_marker()[self.map['tribe'][pos[0][i], pos[1][i]]])
         if _is_show:
             mpy.show(figure)
+            time.sleep(0.1)
         return figure
 
 
@@ -58,7 +60,7 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
     # 0: origin, 1: east, 2: south, 3: west, 4:north
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
-    nneighbour = np.zeros(cont, dtype=int)
+    nneighbour = np.zeros((1, cont), dtype=int)
     if pos_x == 0:
         nneighbour[3] = -1
     else:
@@ -80,7 +82,7 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
 
 def read_neighbour(the_map, the_size, spotty, length=2):
     nneighbour = read_nearest_neighbour(the_map, the_size, spotty)
-    neighbour = np.zeros(5)
+    neighbour = np.zeros((1, 5), dtype=int)
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
     if length == 1:

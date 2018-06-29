@@ -1,16 +1,16 @@
 import numpy as np
 import TensorBasicModule as tbm
-import BasicFunctionsSJR as bf
+import BasicFunctionsSJR as bfr
 
 
-x = dict()
-x['a1'] = 1
-x['a2'] = 2
-y = dict()
-for p in x:
-    exec('y[\'' + p + '\'] = ' + str(x[p]))
+b = 20
 
-print(type(y['a1']))
+
+def plus(a):
+    return a + b
+
+
+bfr.save_pr('.', 'test.pr', [plus], ['plus'])
 
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]
