@@ -82,7 +82,6 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=4):
 
 def read_neighbour(the_map, the_size, spotty, length=2):
     nneighbour = read_nearest_neighbour(the_map, the_size, spotty)
-    neighbour = np.zeros((1, 5), dtype=int)
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
     if length == 1:
