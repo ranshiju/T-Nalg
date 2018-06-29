@@ -36,7 +36,7 @@ class GameBasic:
         neighbor1 = self.universe.read_map(self.spotties[nth], 1)
         movement = np.nonzero(neighbor1['tribe'] == 0)
         rand_pos = np.random.randint(0, len(movement[1]), 1)
-        movement = movement[1][rand_pos[0]]
+        movement = movement[1][rand_pos[0]] + 1
         new_pos = find_position_from_movement(self.spotties[nth].position, movement)
         new = spotty_copy(self.spotties[nth])
         new.enter_map_position(new_pos)

@@ -39,6 +39,7 @@ class Universe:
             self.figure = self.plot_universe()
 
     def plot_universe(self, _show_time=1, _is_show=True):
+        mpy.clf()
         mpy.ion()
         mpy.show()
         figure = plot_square_map(self.size[0], self.size[1])
