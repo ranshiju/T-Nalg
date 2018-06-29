@@ -17,6 +17,7 @@ class Universe:
         neighbour = dict()
         for p in spotty.info:
             neighbour[p] = read_neighbour(self.map[p], self.size, spotty, length)
+        return neighbour
 
     def move_universe(self, spotty, move):
         self.delete_universe(spotty)
