@@ -60,7 +60,7 @@ def read_nearest_neighbour(the_map, the_size, spotty, cont=5):
     # 0: origin, 1: east, 2: south, 3: west, 4:north
     pos_x = spotty.position[0]
     pos_y = spotty.position[1]
-    nneighbour = np.zeros((1, cont), dtype=int)
+    nneighbour = np.zeros(cont, dtype=int)
     if pos_x == 0:
         nneighbour[3] = -1
     else:
