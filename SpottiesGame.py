@@ -87,7 +87,7 @@ class SpottiesGameV0(GameBasic):
 
     @ staticmethod
     def if_gain_energy(env2, cond_energy):
-        return not (sum(env2 == 0) < cond_energy)
+        return np.count_nonzero(env2 == 0) < cond_energy + 0.1
 
 
 def game_v0():
@@ -106,10 +106,10 @@ def game_v0():
     game = SpottiesGameV0(info, cond_gain_energy, lx, ly, max_age, split_energy)
     game.add_spotty_positions(info, ini_pos)
 
-    save_intel_linear_random(8, 5, 'linear_intel.pr')
+    save_intel_linear_random(9, 5, 'linear_intel.pr')
     intel1 = dict()
     intel1['type'] = 'linear'
-    intel1['data'] = [bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')]
+    intel1['data'] = bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')
     intel = [intel1]
 
     for t in range(0, time):
