@@ -21,11 +21,8 @@ class Universe:
         return neighbour
 
     def move_universe(self, spotty, decision, is_figure=False):
-        print('before move, position is' + str([spotty.position[0]]) + str([spotty.position[1]]))
         self.delete_universe(spotty, is_figure)
-        print('decision is ' + str(decision))
         spotty.position = find_position_from_movement(spotty.position, decision)
-        print('new position is :' + str([spotty.position[0]]) + str([spotty.position[1]]))
         self.put_universe(spotty, is_figure)
         if is_figure:
             self.figure = self.plot_universe()
