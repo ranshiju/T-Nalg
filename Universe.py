@@ -8,6 +8,7 @@ class Universe:
     def __init__(self, info, lx=10, ly=10, _is_debug=False):
         self._is_debug = _is_debug
         self.size = [lx, ly]
+        self._depth = 1
         self.figure = plot_square_map(lx, ly)
         self.map = dict()
         for p in info:
@@ -16,18 +17,22 @@ class Universe:
     def read_map(self, spotty, length=2):
         neighbour = dict()
         for p in spotty.info:
-            neighbour[p] = read_neighbour(self.map[p], self.size, spotty, length)
+            neighbour[p] = read_neighbour(self.map[p], self.size, spotty.position, length)
         return neighbour
 
     def move_universe(self, spotty, decision, is_figure=False):
+        print('before move, position is' + str([spotty.position[0]]) + str([spotty.position[1]]))
         self.delete_universe(spotty, is_figure)
+        print('decision is ' + str(decision))
         spotty.position = find_position_from_movement(spotty.position, decision)
+        print('new position is :' + str([spotty.position[0]]) + str([spotty.position[1]]))
         self.put_universe(spotty, is_figure)
         if is_figure:
             self.figure = self.plot_universe()
 
     def put_universe(self, spotty, is_figure=False):
         for p in spotty.info:
+            # print('position in put' + str(spotty.position[0]) + str(spotty.position[1]))
             self.map[p][spotty.position[0], spotty.position[1]] = spotty.info[p]
         if is_figure:
             self.figure = self.plot_universe()
@@ -38,7 +43,7 @@ class Universe:
         if is_figure:
             self.figure = self.plot_universe()
 
-    def plot_universe(self, _show_time=1, _is_show=True):
+    def plot_universe(self, _show_time=2, _is_show=True):
         mpy.clf()
         mpy.ion()
         mpy.show()
@@ -49,75 +54,46 @@ class Universe:
                 map_color = self.map['nation'] - 1
             else:
                 map_color = np.zeros([self.size[0], self.size[1]], dtype=int)
-            figure = mpy.plot(pos[0][i], pos[1][i], color=list_color()[map_color[pos[0][i], pos[1][i]]],
+            figure = mpy.plot(pos[1][i], pos[0][i], color=list_color()[map_color[pos[0][i], pos[1][i]]],
                               marker=list_marker()[self.map['tribe'][pos[0][i], pos[1][i]]])
         if _is_show:
             mpy.draw()
             mpy.pause(_show_time)
+            mpy.show()
         return figure
 
 
-def read_nearest_neighbour(the_map, the_size, spotty, cont=4):
-    # 0: origin, 1: east, 2: south, 3: west, 4:north
-    pos_x = spotty.position[0]
-    pos_y = spotty.position[1]
+def read_nearest_neighbour(the_map, the_size, pos, cont=4):
+    # 0: east, 1: south, 2: west, 3:north
     nneighbour = np.zeros((1, cont), dtype=int)
-    if pos_x == 0:
-        nneighbour[0, 2] = -1
-    else:
-        nneighbour[0, 2] = the_map[pos_x - 1, pos_y]
-    if pos_x == the_size[0] - 1:
-        nneighbour[0, 0] = -1
-    else:
-        nneighbour[0, 0] = the_map[pos_x + 1, pos_y]
-    if pos_y == 0:
-        nneighbour[0, 3] = -1
-    else:
-        nneighbour[0, 3] = the_map[pos_x, pos_y - 1]
-    if pos_y == the_size[1] - 1:
-        nneighbour[0, 1] = -1
-    else:
-        nneighbour[0, 1] = the_map[pos_x, pos_y + 1]
+    _map_extended = extend_map(the_map)
+    nneighbour[0, 0] = _map_extended[pos[0] + 2][pos[1] + 1]
+    nneighbour[0, 1] = _map_extended[pos[0] + 1][pos[1] + 2]
+    nneighbour[0, 2] = _map_extended[pos[0]][pos[1] + 1]
+    nneighbour[0, 3] = _map_extended[pos[0] + 1][pos[1]]
     return nneighbour
 
 
-def read_neighbour(the_map, the_size, spotty, length=2):
-    nneighbour = read_nearest_neighbour(the_map, the_size, spotty)
-    neighbour = np.zeros((1, 4))
-    pos_x = spotty.position[0]
-    pos_y = spotty.position[1]
-    if length == 1:
-        neighbour = nneighbour
-    elif length == 2:
-        neighbour = np.hstack((nneighbour, -np.ones((1, 4), dtype=int)))
-        if pos_x == 0 and pos_y == 0:
-            neighbour[0, 5] = the_map[pos_x + 1, pos_y + 1]
-        elif pos_x == 0 and pos_y == the_size[1] - 1:
-            neighbour[0, 4] = the_map[pos_x + 1, pos_y - 1]
-        elif pos_x == the_size[0] - 1 and pos_y == 0:
-            neighbour[0, 6] = the_map[pos_x - 1, pos_y + 1]
-        elif pos_x == the_size[0] - 1 and pos_y == the_size[1] - 1:
-            neighbour[0, 7] = the_map[pos_x - 1, pos_y + 1]
-        elif pos_x == 0:
-            neighbour[0, 5] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[0, 4] = the_map[pos_x + 1, pos_y - 1]
-        elif pos_x == the_size[0] - 1:
-            neighbour[0, 6] = the_map[pos_x - 1, pos_y + 1]
-            neighbour[0, 7] = the_map[pos_x - 1, pos_y + 1]
-        elif pos_y == 0:
-            neighbour[0, 5] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[0, 6] = the_map[pos_x - 1, pos_y + 1]
-        elif pos_y == the_size[1] - 1:
-            neighbour[0, 4] = the_map[pos_x + 1, pos_y - 1]
-            neighbour[0, 7] = the_map[pos_x - 1, pos_y - 1]
-        else:
-            neighbour[0, 4] = the_map[pos_x + 1, pos_y - 1]
-            neighbour[0, 5] = the_map[pos_x + 1, pos_y + 1]
-            neighbour[0, 6] = the_map[pos_x - 1, pos_y + 1]
-            neighbour[0, 7] = the_map[pos_x - 1, pos_y - 1]
+def read_neighbour(the_map, the_size, pos, length=2):
+    # 0: east, 1: south, 2: west, 3:north 4:NE 5:SE 6:SW 7:NW
+    neighbour = read_nearest_neighbour(the_map, the_size, pos)
+    if length == 2:
+        neighbour = np.hstack((neighbour, np.zeros((1, 4), dtype=int)))
+        _map_extended = extend_map(the_map)
+        neighbour[0, 4] = _map_extended[pos[0] + 2][pos[1]]
+        neighbour[0, 5] = _map_extended[pos[0] + 2][pos[1] + 2]
+        neighbour[0, 6] = _map_extended[pos[0]][pos[1] + 2]
+        neighbour[0, 7] = _map_extended[pos[0]][pos[1]]
     return neighbour
 
 
+def extend_map(the_map, depth=1):
+    size_0 = np.shape(the_map)
+    map_extended = np.zeros((size_0[0]+ 2*depth, size_0[1] + 2*depth), dtype=int) - 1
+    for i in range(depth, size_0[0] + depth):
+        for j in range(depth, size_0[1] + depth):
+            map_extended[i][j] = the_map[i - depth][j - depth]
+    return map_extended
 ################################################
 # plot function
 
@@ -152,12 +128,6 @@ def list_marker():
     return marker_list
 
 
-# def plot_map(the_map, the_size, the_list):
-#     for i in range(0, the_size[0]):
-#         for j in range(0, the_size[1]):
-#             figure = plot()
-
-
 def plot_put(position, info, _is_show=False):
     try:
         nation = info['nation'] - 1
@@ -167,7 +137,3 @@ def plot_put(position, info, _is_show=False):
     if _is_show:
         mpy.show(figure)
     return figure
-
-
-# def plot_delete(position, _is_show=False):
-#     mpy.clf(position)
