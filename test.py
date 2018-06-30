@@ -1,11 +1,7 @@
 import numpy as np
 
 
-x = 4
-for n in range(0, x):
-    print(n)
-    x = 2
-print(x)
+print(np.random.random())
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]
 # a = tbm.CONT(tensors, indexes)
