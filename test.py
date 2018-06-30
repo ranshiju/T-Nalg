@@ -3,8 +3,7 @@ import TensorBasicModule as tbm
 import BasicFunctionsSJR as bfr
 
 
-x = np.eye(4)
-print(np.count_nonzero(x==0))
+print(np.random.randint(0, 9, 1))
 
 
 

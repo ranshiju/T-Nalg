@@ -33,9 +33,15 @@ class Spotty:
         else:
             bfr.print_error('Cannot move before entering the map')
 
+    def report_yourself(self):
+        print('Age : ' + str(self.age))
+        print('Energy: ' + str(self.energy))
+        print('Position: ' + str(self.position))
+
+
 
 def decide_by_intel(intel, env):
-    env = env[:].astype(np.float64)
+    env = env[:].astype(np.float64) + 1
     if intel['type'] is 'linear':
         return linear_intel(intel['data'], env)
 
