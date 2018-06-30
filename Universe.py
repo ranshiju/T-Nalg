@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as mpy
 from SpottiesGame import find_position_from_movement
 
+marker_list = ('o', 's', 'p', '*', 'h', 'x', 'D')
+list_color = ('C1', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9')
+list_plot = {'tribe': marker_list, 'nation': list_color}
+
 
 class Universe:
 
@@ -51,8 +55,8 @@ class Universe:
                 map_color = self.map['nation'] - 1
             else:
                 map_color = np.zeros([self.size[0], self.size[1]], dtype=int)
-            figure = mpy.plot(pos[1][i], pos[0][i], color=list_color()[map_color[pos[0][i], pos[1][i]]],
-                              marker=list_marker()[self.map['tribe'][pos[0][i], pos[1][i]]])
+            figure = mpy.plot(pos[1][i], pos[0][i], color=list_color[map_color[pos[0][i], pos[1][i]]],
+                              marker=marker_list[self.map['tribe'][pos[0][i], pos[1][i]]])
         if _is_show:
             mpy.draw()
             mpy.pause(_show_time)
@@ -110,27 +114,12 @@ def plot_square_map(width, height, _is_show=False):
     return figure
 
 
-def plot_list():
-    list_plot = {'tribe': list_marker(), 'nation': list_color()}
-    return list_plot
-
-
-def list_color():
-    color_list = ('C1', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9')
-    return color_list
-
-
-def list_marker():
-    marker_list = ('o', 's', 'p', '*', 'h', 'x', 'D')
-    return marker_list
-
-
 def plot_put(position, info, _is_show=False):
     try:
         nation = info['nation'] - 1
     except KeyError:
         nation = 0
-    figure = mpy.plot(position[0], position[1], color=list_color()[nation], marker=list_marker()[info['tribe'] - 1])
+    figure = mpy.plot(position[0], position[1], color=list_color[nation], marker=marker_list[info['tribe'] - 1])
     if _is_show:
         mpy.show(figure)
     return figure
