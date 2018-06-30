@@ -39,7 +39,6 @@ class Spotty:
         print('Position: ' + str(self.position))
 
 
-
 def decide_by_intel(intel, env):
     env = env[:].astype(np.float64) + 1
     if intel['type'] is 'linear':

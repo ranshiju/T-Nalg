@@ -47,7 +47,7 @@ class GameBasic:
 
     def spotty_move(self, nth, decision):
         self.universe.move_universe(self.spotties[nth], decision)
-        self.spotties[nth].move(decision)
+        # self.spotties[nth].move(decision)
         self.spotties[nth].age += 1
 
     def spotty_die(self, nth):
