@@ -1,14 +1,7 @@
-from Universe import extend_map, read_neighbour
 import numpy as np
 
 
-A = np.zeros((6, 4))
-print(A)
-
-B = extend_map(A, 1)
-print(B)
-
-print(read_neighbour(B, np.shape(B), [1, 1]))
+print(np.random.random())
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]
 # a = tbm.CONT(tensors, indexes)

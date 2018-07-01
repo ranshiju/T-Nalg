@@ -40,7 +40,7 @@ class Spotty:
 
 
 def decide_by_intel(intel, env):
-    env = env[:].astype(np.float64) + 1
+    env = env[:].astype(np.float64)
     if intel['type'] is 'linear':
         return linear_intel(intel['data'], env)
 
@@ -51,7 +51,8 @@ def save_intel_linear_random(input_len, output_len, file_name):
 
 
 def linear_intel(intel, env):
-    output = env.reshape(1, -1).dot(intel)
+    output = (env+1).dot(intel)
+    output[0, 1:] = output[0, 1:] * (env[0, :4] == 0)
     output = output**2
     output /= np.sum(output)
     return output2decision(output)
@@ -63,7 +64,7 @@ def output2decision(output):
     for n in range(1, output.size):
         v[n] = v[n - 1] + output[0, n]
     rand = np.random.random()
-    return bfr.arg_find_array(v > rand, 1, 'first')
+    return bfr.arg_find_array(v > rand, 1, 'first') - 1
 
 
 def spotty_copy(spotty):
