@@ -43,7 +43,7 @@ class Universe:
         if is_figure:
             self.figure = self.plot_universe()
 
-    def plot_universe(self, _show_time=2, _is_show=True):
+    def plot_universe(self, _show_time=0.1, _is_show=True):
         mpy.clf()
         mpy.ion()
         mpy.show()
