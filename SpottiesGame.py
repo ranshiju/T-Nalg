@@ -81,12 +81,14 @@ class SpottiesGameV0(GameBasic):
             self.spotty_die(nth)
         else:
             env = self.universe.read_map(self.spotties[nth], 2)
+            print(env)
             if self.if_gain_energy(env, self.cond_gain_energy):
                 self.spotties[nth].energy += 1
             if self.spotties[nth].energy == self.split_energy:
                 self.spotty_split_random(nth)
             else:
                 decision = decide_by_intel(intel, env['tribe'])
+                print(decision)
                 self.spotty_move(nth, decision)
 
     @ staticmethod
@@ -102,8 +104,8 @@ def game_v0():
     ly = 9
     # properties of spotties
     ini_pos = [[4, 4]]
-    max_age = 15
-    split_energy = 5
+    max_age = 100
+    split_energy = 100
     cond_gain_energy = 3
     # initial game
     info = {'tribe': 1}
