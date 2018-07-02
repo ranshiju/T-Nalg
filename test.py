@@ -1,7 +1,20 @@
 import numpy as np
+from matplotlib import pyplot as mpy
 
 
-print(np.random.random())
+def extend_map(the_map, depth=1):
+    size_0 = np.shape(the_map)
+    map_extended = np.vstack((the_map, - np.ones((depth, size_0[1]), dtype=int)))
+    map_extended = np.vstack((- np.ones((depth, size_0[1]), dtype=int), map_extended))
+    map_extended = np.hstack((map_extended, - np.ones((size_0[0] + 2*depth, depth), dtype=int)))
+    map_extended = np.hstack((- np.ones((size_0[0] + 2*depth, depth), dtype=int), map_extended))
+    return map_extended
+
+
+the_map = np.ones((4, 5))
+print(extend_map(np.ones((4, 5))))
+
+
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
 # indexes = [[1, 2, -1], [2, 3, -2], [3, 1, -3]]
 # a = tbm.CONT(tensors, indexes)
