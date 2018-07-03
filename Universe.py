@@ -15,7 +15,6 @@ class Universe:
         self._depth = 1
         self.figure = plot_square_map(lx, ly)
         self.map = dict()
-        self._map = extend_map(self.map)
         for p in info:
             self.map[p] = np.zeros((lx, ly), dtype=int)
 
@@ -65,17 +64,18 @@ class Universe:
 
     def read_neighbour(self, pos, length=2):
         # 0: east, 1: south, 2: west, 3:north 4:NE 5:SE 6:SW 7:NW
+        _map = extend_map(self.map['tribe'], 1)
         neighbour = np.zeros((1, 4), dtype=int)
-        neighbour[0, 0] = self._map[pos[0] + 2][pos[1] + 1]
-        neighbour[0, 1] = self._map[pos[0] + 1][pos[1]]
-        neighbour[0, 2] = self._map[pos[0]][pos[1] + 1]
-        neighbour[0, 3] = self._map[pos[0] + 1][pos[1] + 2]
+        neighbour[0, 0] = _map[pos[0] + 2, pos[1] + 1]
+        neighbour[0, 1] = _map[pos[0] + 1, pos[1]]
+        neighbour[0, 2] = _map[pos[0], pos[1] + 1]
+        neighbour[0, 3] = _map[pos[0] + 1, pos[1] + 2]
         if length == 2:
             neighbour = np.hstack((neighbour, np.zeros((1, 4), dtype=int)))
-            neighbour[0, 4] = self._map[pos[0] + 2][pos[1] + 2]
-            neighbour[0, 5] = self._map[pos[0] + 2][pos[1]]
-            neighbour[0, 6] = self._map[pos[0]][pos[1]]
-            neighbour[0, 7] = self._map[pos[0]][pos[1] + 1]
+            neighbour[0, 4] = _map[pos[0] + 2, pos[1] + 2]
+            neighbour[0, 5] = _map[pos[0] + 2, pos[1]]
+            neighbour[0, 6] = _map[pos[0], pos[1]]
+            neighbour[0, 7] = _map[pos[0], pos[1] + 1]
         return neighbour
 
 
