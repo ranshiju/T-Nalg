@@ -81,7 +81,7 @@ class Universe:
 
 def extend_map(the_map, depth=1):
     size_0 = np.shape(the_map)
-    map_extended = -np.ones(size_0[0]+2*depth, size_0[1]+2*depth)
+    map_extended = -np.ones((size_0[0]+2*depth, size_0[1]+2*depth), dtype=int)
     map_extended[depth:size_0[0]+depth, depth:size_0[1]+depth] = the_map[:, :]
     return map_extended
 ################################################
