@@ -15,13 +15,14 @@ class Universe:
         self._depth = 1
         self.figure = plot_square_map(lx, ly)
         self.map = dict()
+        self._map = extend_map(self.map)
         for p in info:
             self.map[p] = np.zeros((lx, ly), dtype=int)
 
     def read_map(self, spotty, length=2):
         neighbour = dict()
         for p in spotty.info:
-            neighbour[p] = read_neighbour(self.map[p], self.size, spotty.position, length)
+            neighbour[p] = self.read_neighbour(spotty.position, length)
         return neighbour
 
     def move_universe(self, spotty, decision, is_figure=False):
@@ -62,37 +63,26 @@ class Universe:
             mpy.show()
         return figure
 
-
-def read_nearest_neighbour(the_map, the_size, pos, cont=4):
-    # 0: east, 1: south, 2: west, 3:north
-    nneighbour = np.zeros((1, cont), dtype=int)
-    _map_extended = extend_map(the_map)
-    nneighbour[0, 0] = _map_extended[pos[0] + 2][pos[1] + 1]
-    nneighbour[0, 1] = _map_extended[pos[0] + 1][pos[1]]
-    nneighbour[0, 2] = _map_extended[pos[0]][pos[1] + 1]
-    nneighbour[0, 3] = _map_extended[pos[0] + 1][pos[1] + 2]
-    return nneighbour
-
-
-def read_neighbour(the_map, the_size, pos, length=2):
-    # 0: east, 1: south, 2: west, 3:north 4:NE 5:SE 6:SW 7:NW
-    neighbour = read_nearest_neighbour(the_map, the_size, pos)
-    if length == 2:
-        neighbour = np.hstack((neighbour, np.zeros((1, 4), dtype=int)))
-        _map_extended = extend_map(the_map)
-        neighbour[0, 4] = _map_extended[pos[0] + 2][pos[1] + 2]
-        neighbour[0, 5] = _map_extended[pos[0] + 2][pos[1]]
-        neighbour[0, 6] = _map_extended[pos[0]][pos[1]]
-        neighbour[0, 7] = _map_extended[pos[0]][pos[1] + 1]
-    return neighbour
+    def read_neighbour(self, pos, length=2):
+        # 0: east, 1: south, 2: west, 3:north 4:NE 5:SE 6:SW 7:NW
+        neighbour = np.zeros((1, 4), dtype=int)
+        neighbour[0, 0] = self._map[pos[0] + 2][pos[1] + 1]
+        neighbour[0, 1] = self._map[pos[0] + 1][pos[1]]
+        neighbour[0, 2] = self._map[pos[0]][pos[1] + 1]
+        neighbour[0, 3] = self._map[pos[0] + 1][pos[1] + 2]
+        if length == 2:
+            neighbour = np.hstack((neighbour, np.zeros((1, 4), dtype=int)))
+            neighbour[0, 4] = self._map[pos[0] + 2][pos[1] + 2]
+            neighbour[0, 5] = self._map[pos[0] + 2][pos[1]]
+            neighbour[0, 6] = self._map[pos[0]][pos[1]]
+            neighbour[0, 7] = self._map[pos[0]][pos[1] + 1]
+        return neighbour
 
 
 def extend_map(the_map, depth=1):
     size_0 = np.shape(the_map)
-    map_extended = np.vstack((the_map, - np.ones((depth, size_0[1]), dtype=int)))
-    map_extended = np.vstack((- np.ones((depth, size_0[1]), dtype=int), map_extended))
-    map_extended = np.hstack((map_extended, - np.ones((size_0[0] + 2*depth, depth), dtype=int)))
-    map_extended = np.hstack((- np.ones((size_0[0] + 2*depth, depth), dtype=int), map_extended))
+    map_extended = -np.ones(size_0[0]+2*depth, size_0[1]+2*depth)
+    map_extended[depth:size_0[0]+depth, depth:size_0[1]+depth] = the_map[:, :]
     return map_extended
 ################################################
 # plot function
