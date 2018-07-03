@@ -1,18 +1,14 @@
 import numpy as np
 from matplotlib import pyplot as mpy
+import BasicFunctionsSJR as bfr
+from Spotties import linear_intel, output2decision
 
 
-def extend_map(the_map, depth=1):
-    size_0 = np.shape(the_map)
-    map_extended = np.vstack((the_map, - np.ones((depth, size_0[1]), dtype=int)))
-    map_extended = np.vstack((- np.ones((depth, size_0[1]), dtype=int), map_extended))
-    map_extended = np.hstack((map_extended, - np.ones((size_0[0] + 2*depth, depth), dtype=int)))
-    map_extended = np.hstack((- np.ones((size_0[0] + 2*depth, depth), dtype=int), map_extended))
-    return map_extended
-
-
-the_map = np.ones((4, 5))
-print(extend_map(np.ones((4, 5))))
+intel = bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')
+# This environment only allow spotty to move to west
+env = np.array([[-1, -1, 0, -1, -1, -1, -1, -1]])
+# The linear intel should only output 3, but instead it output -1, which is meaningless
+print(linear_intel(intel, env))
 
 
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]
