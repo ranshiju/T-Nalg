@@ -24,9 +24,7 @@ def generate_parameters_infinite_dmrg():
     return para
 
 
-def generate_parameters_dmrg():
-    lattice = 'arbitrary'
-
+def generate_parameters_dmrg(lattice='chain'):
     # =======================================================
     # No further changes are needed for these codes
     model = ['chain', 'square', 'arbitrary']
@@ -41,6 +39,8 @@ def generate_parameters_dmrg():
         print_error('Wrong input of lattice!')
         print_options(model, welcome='Set lattice as one of the following:\t', quote='\'')
     para['nh'] = para['index2'].shape[0]  # number of two-body interactions
+    para['coeff1'] = np.ones((para['l'], 1))
+    para['coeff2'] = np.ones((para['positions_h2'].shape[0] * 3, 1))
     return para
     # =======================================================
 
@@ -63,9 +63,11 @@ def common_parameters_dmrg():
 
 
 def parameter_dmrg_arbitrary():
+    para0 = common_parameters_dmrg()
     para = dict()
     para['lattice'] = 'choose_a_name'
     para['spin'] = 'half'
+    para = dict(para, **para0)
 
     # Do NOT change the first 6 elements of para['op'] (as well as the order), unless you know what you are doing
     # Otherwise, some problem may happen for computing the observables (such as magnetization or energy per site)
@@ -114,6 +116,9 @@ def parameter_dmrg_chain():
     para = dict()
     para['spin'] = 'half'
     para['lattice'] = 'chain'
+    para0 = common_parameters_dmrg()
+    para = dict(para, **para0)
+
     para['bound_cond'] = 'open'  # open or periodic
     para['l'] = 12  # Length of MPS and chain
     para['spin'] = 'half'

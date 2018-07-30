@@ -3,6 +3,8 @@ from BasicFunctionsSJR import arg_find_array
 from TensorBasicModule import sort_vectors
 from HamiltonianModule import hamiltonian_heisenberg, hamiltonian2cell_tensor
 import Parameters as pm
+import matplotlib.pyplot as mp
+from termcolor import cprint, colored
 import numpy as np
 import time
 
@@ -122,6 +124,7 @@ def dmrg_infinite_size(para=None):
     info['t_cost'] = time.time() - t_start
     return A
 
+
 # ======================================================
 def positions_set2array(pos_set):
     nh = pos_set.__len__()
@@ -165,3 +168,49 @@ def get_bond_energies(eb_full, positions, index2):
         p = np.nonzero(p)
         eb[p] += eb_full[i]
     return eb
+
+
+def plot_finite_dmrg(x, A, para, ob):
+    if x is 'eb':  # plot bond energies
+        if para['lattice'] == 'chain':
+            nh1 = ob['eb'].size - (para['bound_cond'] == 'periodic')
+            mp.plot(range(0, nh1), ob['eb'][:nh1], 'bo')
+            if para['bound_cond'] == 'periodic':
+                mp.plot(np.array([0, nh1 - 1]), ob['eb'][-1] * np.ones((2,)), 'r--.', linewidth=0.5)
+                mp.text(A.length / 2, ob['eb'][-1] - 0.0002, 'Eb(0, %d) = %g' % (A.length - 1, ob['eb'][-1]),
+                        fontsize=10, verticalalignment="top", horizontalalignment="center")
+        elif para['lattice'] == 'square' or 'arbitrary':
+            nh1 = ob['eb'].size
+            f1, = mp.plot(range(1, nh1 + 1), ob['eb'][:nh1], 'bo')
+            mp.title('Bond energies (nearest-neighbor correlators)')
+        mp.xlabel('lattice bond')
+        mp.ylabel(r'$\langle \hat{s}_n \hat{s}_{n+1} \rangle$')
+        print('Bond energies = ')
+        cprint(str(ob['eb'].T), 'cyan')
+        print('Energy per site = ' + colored(str(ob['e_per_site']), 'cyan'))
+        if para['lattice'] == 'square':
+            print('NOTE: check ' + colored('para[positions_h2]', 'cyan') + 'to see how the bonds are numbered')
+    elif x is 'mag':  # plot magnetization
+        mp.subplot(2, 1, 1)
+        f1, = mp.plot(range(1, A.length + 1), ob['mx'], '-ro')
+        mp.ylabel(r'$\langle \hat{s}^x \rangle$')
+        # mp.legend(handles=[f1, ], labels=[r'$\langle \hat{s}_n^x \rangle$'], loc='best')
+        mp.subplot(2, 1, 2)
+        f2, = mp.plot(range(1, A.length + 1), ob['mz'], '--bs')
+        mp.xlabel('lattice site')
+        mp.ylabel(r'$\langle \hat{s}^z \rangle$')
+        # mp.legend(handles=[f2, ], labels=[r'$\langle \hat{s}_n^z \rangle$'], loc='best')
+        print('mx = ')
+        print(str(ob['mx'].T))
+        print('mz = ')
+        print(str(ob['mz'].T))
+        if para['lattice'] == 'square':
+            print('Check the numbers of sites in .\\fig_dmrg\\' + para['lattice']
+                  + '(%d,%d).png' % (para['square_width'], para['square_height']))
+    elif x is 'ent':
+        mp.plot(range(1, A.length), A.ent, '--or')
+        mp.xlabel('lattice bond')
+        mp.ylabel('entanglement entropy')
+        print('entanglement entropy = ')
+        print(str(A.ent.T))
+    mp.show()

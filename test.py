@@ -3,7 +3,6 @@ from matplotlib import pyplot as mpy
 import BasicFunctionsSJR as bfr
 
 
-<<<<<<< HEAD
 x = 0
 y = np.random.randn(2, 2, 2)
 print(x + y)
@@ -81,7 +80,7 @@ print(x + y)
 # print(y)
 # z = Bf.arg_find_array(x > 0, 2, 'first')
 # print(z)
-=======
+
 # intel = bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')
 # # This environment only allow spotty to move to west
 # env = np.array([[-1, -1, 0, -1, -1, -1, -1, -1]])
@@ -105,7 +104,3 @@ def plot_square_map(width, height, _is_show=False):
 
 fig1 = plot_square_map(5, 4)
 
-# mpy.figure(1)
-# mpy.clf()
-fig2.show()
->>>>>>> fef92b1e4a7e5326e3447dbd08bab1b538df5532
