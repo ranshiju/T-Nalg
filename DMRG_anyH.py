@@ -21,7 +21,9 @@ def dmrg_finite_size(para=None):
         para = pm.generate_parameters_dmrg()
     # Initialize MPS
     if is_parallel:
-        par_pool = ThreadPool(n_nodes)
+        par_pool = dict()
+        par_pool['n'] = n_nodes
+        par_pool['pool'] = ThreadPool(n_nodes)
     else:
         par_pool = None
 

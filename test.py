@@ -4,11 +4,9 @@ import BasicFunctionsSJR as bfr
 from Spotties import linear_intel, output2decision
 
 
-intel = bfr.load_pr('.\\Intels\\linear_intel.pr', 'intel')
-# This environment only allow spotty to move to west
-env = np.array([[-1, -1, 0, -1, -1, -1, -1, -1]])
-# The linear intel should only output 3, but instead it output -1, which is meaningless
-print(linear_intel(intel, env))
+x = 0
+y = np.random.randn(2, 2, 2)
+print(x + y)
 
 
 # tensors = [np.random.randn(2, 2, 2), np.random.randn(2, 2, 2), np.random.randn(2, 2, 2)]

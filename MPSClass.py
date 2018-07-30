@@ -83,7 +83,6 @@ class MpsOpenBoundaryClass(MpsBasic):
 
         self._is_parallel = is_parallel
         self.pool = par_pool
-
         self._debug = debug  # if in debug mode
         self.eig_way = eig_way
 
@@ -381,6 +380,13 @@ class MpsOpenBoundaryClass(MpsBasic):
             v_middle = np.eye(self.mps[p].shape[1])
         return v_left, v_middle, v_right
 
+    def environment_s1_parallel(self, inputs):
+        env2 = 0
+        for n in range(0, inputs.__len__()):
+            v_left, v_middle, v_right = self.environment_s1(inputs[n][:3])
+            env2 += inputs[n][3] * np.kron(np.kron(v_left, v_middle), v_right)
+        return env2
+
     # calculate the environment (one-body terms)
     def environment_s1(self, inputs):
         # p is the position of the tensor to be updated
@@ -414,6 +420,13 @@ class MpsOpenBoundaryClass(MpsBasic):
             v_right = np.eye(self.virtual_dim[p + 1])
             v_middle = operator
         return v_left, v_middle, v_right
+
+    def environment_s1_s2_parallel(self, inputs):
+        env2 = 0
+        for n in range(0, inputs.__len__()):
+            v_left, v_middle, v_right = self.environment_s1_s2(inputs[n])
+            env2 += np.kron(np.kron(v_left, v_middle), v_right)
+        return env2
 
     # update the boundary vector v by contracting from l0 to l1 without operators
     def contract_v_l0_to_l1(self, l0, l1, v=np.zeros(0)):
@@ -494,24 +507,33 @@ class MpsOpenBoundaryClass(MpsBasic):
                         self.check_environments(v_left, v_middle, v_right, p)
                     h_effect += coeff2[n] * np.kron(np.kron(v_left, v_middle), v_right)
         else:  # parallel computations
-            inputs = list()
+            inputs = empty_list(self.pool['n'], list())
+            n_now = 0
             for n in range(0, nh1):
                 if abs(coeff1[n]) > tol and np.linalg.norm(self.operators[index1[n, 1]].reshape(1, -1)) > tol:
-                    inputs.append((p, index1[n, 1], index1[n, 0]))
-            tmp = self.pool.map(self.environment_s1, inputs)
-            h_effect = self.calculate_environment_for_parallel(tmp, np.prod(s))
-            inputs = list()
+                    inputs[n_now % self.pool['n']].append((p, index1[n, 1], index1[n, 0], coeff1[n]))
+                    n_now += 1
+            tmp = self.pool['pool'].map(self.environment_s1_parallel, inputs)
+            self.pool['pool'].join()
+            h_effect = 0
+            for n in range(0, tmp.__len__()):
+                h_effect += tmp[n]
+            inputs = empty_list(self.pool['n'], list())
+            n_now = 0
             for n in range(0, nh2):
                 # if the coefficient is too small, ignore its contribution
                 if abs(coeff2[n]) > tol:
-                    inputs.append((p, index2[n, 2:4], index2[n, :2]))
-            tmp = self.pool.map(self.environment_s1_s2, inputs)
-            self.pool.join()
-            h_effect += self.calculate_environment_for_parallel(tmp, np.prod(s))
+                    inputs[n_now % self.pool['n']].append((p, index2[n, 2:4], index2[n, :2]))
+                    n_now += 1
+            tmp = self.pool['pool'].map(self.environment_s1_s2_parallel, inputs)
+            self.pool['pool'].join()
+            for n in range(0, tmp.__len__()):
+                h_effect += tmp[n]
         h_effect = (h_effect + h_effect.conj().T) / 2
         return h_effect, s
 
     def all_environments(self, p, index1, index2, coeff1, coeff2, tol=1e-12):
+        # for 'update_tensor_eigs' while mapping the effective H to a linear operator
         if self._debug and p != self.center:
             print_error('CenterError: the tensor must be at the orthogonal center before '
                         'defining the function handle', 'magenta')
@@ -530,29 +552,33 @@ class MpsOpenBoundaryClass(MpsBasic):
                 if abs(coeff2[n]) > tol:
                     env2.append(self.environment_s1_s2((p, index2[n, 2:4], index2[n, :2])))
         else:  # parallel computations
-            inputs = list()
+            inputs = empty_list(self.pool['n'], list())
+            n_now = 0
             for n in range(0, nh1):
                 if abs(coeff1[n]) > tol and np.linalg.norm(self.operators[index1[n, 1]].reshape(1, -1)) > tol:
-                    inputs.append((p, index1[n, 1], index1[n, 0]))
-            env1 = self.pool.map(self.environment_s1, inputs)
-            inputs = list()
+                    inputs[n_now % self.pool['n']].append((p, index1[n, 1], index1[n, 0]))
+                    n_now += 1
+            env1 = self.pool['pool'].map(self.environment_s1_parallel, inputs)
+            inputs = empty_list(self.pool['n'], list())
+            n_now = 0
             for n in range(0, nh2):
                 # if the coefficient is too small, ignore its contribution
                 if abs(coeff2[n]) > tol:
-                    inputs.append((p, index2[n, 2:4], index2[n, :2]))
-            env2 = self.pool.map(self.environment_s1_s2, inputs)
-            self.pool.join()
+                    inputs[n_now % self.pool['n']].append((p, index2[n, 2:4], index2[n, :2]))
+                    n_now += 1
+            env2 = self.pool['pool'].map(self.environment_s1_s2_parallel, inputs)
+            self.pool['pool'].join()
         return env1, env2, s
 
     @ staticmethod
     def update_tensor_eigs_f_handle(tensor, env1, env2, s, tau):
-        tensor = tensor.reshape(s)
+        # tensor = tensor.reshape(s)
         nh1 = len(env1)
         nh2 = len(env2)
         for n in range(0, nh1):
-            tensor -= tau * T_module.absorb_matrices2tensor_full_fast(tensor, env1[n])
+            tensor -= tau * env1[n].dot(tensor)
         for n in range(0, nh2):
-            tensor -= tau * T_module.absorb_matrices2tensor_full_fast(tensor, env2[n])
+            tensor -= tau * env2[n].dot(tensor)
         return tensor.reshape(-1, 1)
 
     def update_tensor_eigs(self, p, index1, index2, coeff1, coeff2, tau, is_real, tol=1e-16):
