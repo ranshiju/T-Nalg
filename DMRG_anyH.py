@@ -9,9 +9,9 @@ import numpy as np
 import time
 
 is_debug = False
-is_parallel = False
+is_parallel = True
 n_nodes = 4
-is_save_op = True
+is_save_op = False
 
 
 def dmrg_finite_size(para=None):
@@ -88,7 +88,7 @@ def dmrg_finite_size(para=None):
     print('Simulation finished in %g seconds' % info['t_cost'])
     A.clean_to_save()
     if A._is_parallel:
-        par_pool.close()
+        par_pool['pool'].close()
     return ob, A, info, para
 
 

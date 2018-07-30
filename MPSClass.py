@@ -514,7 +514,7 @@ class MpsOpenBoundaryClass(MpsBasic):
                     inputs[n_now % self.pool['n']].append((p, index1[n, 1], index1[n, 0], coeff1[n]))
                     n_now += 1
             tmp = self.pool['pool'].map(self.environment_s1_parallel, inputs)
-            self.pool['pool'].join()
+            #self.pool['pool'].join()
             h_effect = 0
             for n in range(0, tmp.__len__()):
                 h_effect += tmp[n]
@@ -526,7 +526,7 @@ class MpsOpenBoundaryClass(MpsBasic):
                     inputs[n_now % self.pool['n']].append((p, index2[n, 2:4], index2[n, :2]))
                     n_now += 1
             tmp = self.pool['pool'].map(self.environment_s1_s2_parallel, inputs)
-            self.pool['pool'].join()
+            #self.pool['pool'].join()
             for n in range(0, tmp.__len__()):
                 h_effect += tmp[n]
         h_effect = (h_effect + h_effect.conj().T) / 2
@@ -692,7 +692,7 @@ class MpsOpenBoundaryClass(MpsBasic):
             else:
                 mag[i] = self.observation_s1((sn, i))
         if self._is_parallel:
-            mag = np.array(self.pool.map(self.observation_s1, inputs))
+            mag = np.array(self.pool['pool'].map(self.observation_s1, inputs))
         return mag
 
     def observe_bond_energy(self, index2, coeff2):
@@ -705,7 +705,7 @@ class MpsOpenBoundaryClass(MpsBasic):
             else:
                 eb[n] = coeff2[n] * self.observation_s1_s2((index2[n, 2:], index2[n, :2]))
         if self._is_parallel:
-            eb = np.array(self.pool.map(self.observation_s1_s2, inputs))
+            eb = np.array(self.pool['pool'].map(self.observation_s1_s2, inputs))
         return eb
 
     def norm_mps(self):
@@ -854,6 +854,7 @@ class MpsOpenBoundaryClass(MpsBasic):
         self.effect_ss = {'none': np.zeros(0)}
         self.pos_effect_s = np.zeros((0, 3)).astype(int)
         self.pos_effect_ss = np.zeros((0, 5)).astype(int)
+        self.pool = None
 
 
 # ========================================================================
