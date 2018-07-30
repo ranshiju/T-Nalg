@@ -1,9 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as mpy
 import BasicFunctionsSJR as bfr
-from Spotties import linear_intel, output2decision
 
 
+<<<<<<< HEAD
 x = 0
 y = np.random.randn(2, 2, 2)
 print(x + y)

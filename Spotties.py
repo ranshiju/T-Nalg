@@ -74,15 +74,11 @@ def spotty_copy(spotty):
 
 def find_position_from_movement(pos, movement):
     if movement == 1:
-        pos[0] += 1
         pos[1] += 1
     elif movement == 2:
-        pos[1] -= 1
         pos[0] += 1
     elif movement == 3:
-        pos[0] -= 1
         pos[1] -= 1
     elif movement == 4:
-        pos[1] += 1
         pos[0] -= 1
     return pos
