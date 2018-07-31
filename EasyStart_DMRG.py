@@ -162,8 +162,6 @@ if is_load_data and o_path.isfile(data_full_name) and (para['lattice'] in ('chai
     ob, A = load_pr(data_full_name, ('ob', 'A'))
 else:
     ob, A, info, para = dmrg_finite_size(para)
-    if A._is_parallel:
-        A.pool.close()
     save_pr(para['data_path'], para['data_exp'] + '.pr', (ob, A, info, para), ('ob', 'A', 'info', 'para'))
     print('The data have been saved in ' + colored(para['data_path'].rstrip("\\"), 'green'))
 
