@@ -22,7 +22,7 @@
     2.Input the parameters by following the instructions 
     3.Choose the quantities you are interested in 
 ### Use DMRG by writing a script and editing Parameters.py
-    See an example as "testDMRG.py".
+    See an example in "testDMRG.py".
 ### Some notes: 
     1.Your parameters are saved in '.\para_dmrg\_para.pr' 
     2.To read *.pr, use function 'load_pr' in 'Basic_functions_SJR.py' 
