@@ -9,9 +9,9 @@ import numpy as np
 import time
 
 is_debug = False
-is_parallel = True
-n_nodes = 4
 is_save_op = False
+is_parallel = False
+n_nodes = 4
 
 
 def dmrg_finite_size(para=None):
