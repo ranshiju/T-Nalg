@@ -9,81 +9,90 @@ import numpy as np
 import time
 
 is_debug = False
-is_save_op = False
-is_parallel = False
 n_nodes = 4
+
+if is_debug:
+    cprint('The DMRG code is in the debug mode', 'cyan')
 
 
 def dmrg_finite_size(para=None):
     from MPSClass import MpsOpenBoundaryClass as Mob
     t_start = time.time()
     info = dict()
-    print('Preparation the parameters and MPS')
+    print('Preparing the parameters and MPS')
     if para is None:
         para = pm.generate_parameters_dmrg()
     # Initialize MPS
-    if is_parallel:
+    is_parallel = para['isParallel']
+    if is_parallel or para['isParallelEnvLMR']:
         par_pool = dict()
         par_pool['n'] = n_nodes
         par_pool['pool'] = ThreadPool(n_nodes)
     else:
         par_pool = None
 
-    A = Mob(length=para['l'], d=para['d'], chi=para['chi'], way='qr', ini_way='r', operators=para['op'],
-            debug=is_debug, is_parallel=is_parallel, par_pool=par_pool, is_save_op=is_save_op)
+    A = Mob(length=para['l'], d=para['d'], chi=para['chi'], way='qr', ini_way='r',
+            operators=para['op'], debug=is_debug, is_parallel=para['isParallel'],
+            par_pool=par_pool, is_save_op=para['is_save_op'], eig_way=para['eigWay'],
+            is_env_parallel_lmr=para['isParallelEnvLMR'])
     A.correct_orthogonal_center(para['ob_position'])
     print('Starting to sweep ...')
-    e0_total = 0
+    e0_per_site = 0
     info['convergence'] = 1
     ob = dict()
-    for t in range(1, para['sweep_time']+1):
-        if_ob = ((t % para['dt_ob']) == 0) or t == (para['sweep_time'] - 1)
+    for t in range(0, para['sweep_time']):
+        if_ob = ((t+1) % para['dt_ob'] == 0) or t == (para['sweep_time'] - 1)
         if if_ob:
-            print('In the %d-th round of sweep ...' % t)
+            print('In the %d-th round of sweep ...' % (t+1))
         for n in range(para['ob_position']+1, para['l']):
             if para['if_print_detail']:
                 print('update the %d-th tensor from left to right...' % n)
-            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
-                                 para['is_real'], tol=para['eigs_tol'])
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'],
+                                 para['coeff2'], para['tau'], para['is_real'],
+                                 tol=para['eigs_tol'])
         for n in range(para['l']-2, -1, -1):
             if para['if_print_detail']:
                 print('update the %d-th tensor from right to left...' % n)
-            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
-                                 para['is_real'], tol=para['eigs_tol'])
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'],
+                                 para['coeff2'], para['tau'], para['is_real'],
+                                 tol=para['eigs_tol'])
         for n in range(1, para['ob_position']):
             if para['if_print_detail']:
                 print('update the %d-th tensor from left to right...' % n)
-            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'], para['coeff2'], para['tau'],
-                                 para['is_real'], tol=para['eigs_tol'])
-
+            A.update_tensor_eigs(n, para['index1'], para['index2'], para['coeff1'],
+                                 para['coeff2'], para['tau'], para['is_real'],
+                                 tol=para['eigs_tol'])
         if if_ob:
             ob['eb_full'] = A.observe_bond_energy(para['index2'], para['coeff2'])
             ob['mx'] = A.observe_magnetization(1)
             ob['mz'] = A.observe_magnetization(3)
-            if para['lattice'] in ('square', 'chain'):
-                ob['e_per_site'] = (sum(ob['eb_full']) - para['hx']*sum(ob['mx']) - para['hz']*
-                                    sum(ob['mz']))/A.length
-            else:
-                ob['e_per_site'] = sum(ob['eb_full'])
-                for n in range(0, para['coeff1'].shape[0]):
-                    if para['index1'][n, 1] == 1:
-                        ob['e_per_site'] += para['coeff1'][n]*ob['mx'][n]
-                    elif para['index1'][n, 1] == 3:
-                        ob['e_per_site'] += para['coeff1'][n] * ob['mz'][n]
-                ob['e_per_site'] /= A.length
-            info['convergence'] = abs(ob['e_per_site'] - e0_total)
+            ob['e_per_site'] = (sum(ob['eb_full']) - para['hx'] * sum(ob['mx']) - para['hz'] *
+                                sum(ob['mz'])) / A.length
+            # if para['lattice'] in ('square', 'chain'):
+            #     ob['e_per_site'] = (sum(ob['eb_full']) - para['hx']*sum(ob['mx']) - para['hz'] *
+            #                         sum(ob['mz']))/A.length
+            # else:
+            #     ob['e_per_site'] = sum(ob['eb_full'])
+            #     for n in range(0, para['l']):
+            #         ob['e_per_site'] += para['hx'][n] * ob['mx'][n]
+            #         ob['e_per_site'] += para['hz'][n] * ob['mz'][n]
+            #     ob['e_per_site'] /= A.length
+            info['convergence'] = abs(ob['e_per_site'] - e0_per_site)
             if info['convergence'] < para['break_tol']:
-                print('Converged at the %d-th sweep with error = %g of energy per site.' % (t, info['convergence']))
+                print('Converged at the %d-th sweep with error = %g of energy per site.'
+                      % (t+1, info['convergence']))
                 break
             else:
                 print('Convergence error of energy per site = %g' % info['convergence'])
-                e0_total = ob['e_per_site']
+                e0_per_site = ob['e_per_site']
         if t == para['sweep_time'] - 1 and info['convergence'] > para['break_tol']:
             print('Not converged with error = %g of eb per bond' % info['convergence'])
             print('Consider to increase para[\'sweep_time\']')
     ob['eb'] = get_bond_energies(ob['eb_full'], para['positions_h2'], para['index2'])
     A.calculate_entanglement_spectrum()
     A.calculate_entanglement_entropy()
+    ob['corr_x'] = A.observe_correlators_from_middle(1, 1)
+    ob['corr_z'] = A.observe_correlators_from_middle(3, 3)
     info['t_cost'] = time.time() - t_start
     print('Simulation finished in %g seconds' % info['t_cost'])
     A.clean_to_save()
@@ -93,36 +102,115 @@ def dmrg_finite_size(para=None):
 
 
 # ==========================================================================
-# Infinite DMRG (one-site)
-def dmrg_infinite_size(para=None):
+# Infinite DMRG (one-site or two site)
+def dmrg_infinite_size(para=None, A=None, hamilt=None):
     from MPSClass import MpsInfinite as Minf
+    is_print = True
+
     t_start = time.time()
     info = dict()
-    print('Start iDMRG calculation')
+    if is_print:
+        print('Start ' + str(para['n_site']) + '-site iDMRG calculation')
     if para is None:
         para = pm.generate_parameters_infinite_dmrg()
+    if hamilt is None:
+        hamilt = hamiltonian_heisenberg(para['spin'], para['jxy'], para['jxy'], para['jz'],
+                                        -para['hx']/2, -para['hz']/2)
+    tensor = hamiltonian2cell_tensor(hamilt, para['tau'])
+    if A is None:
+        A = Minf(para['form'], para['d'], para['chi'], para['d'], n_site=para['n_site'],
+                 is_symme_env=para['is_symme_env'])
 
-    hamilt = hamiltonian_heisenberg(para['jxy'], para['jxy'], para['jz'], para['hx']/2, para['hz']/2)
-    tensor = hamiltonian2cell_tensor(hamilt)
-    A = Minf(para['form'], para['d'], para['chi'])
-
-    e0 = 0
+    if A.n_site == 1:
+        e0 = 0
+        e1 = 1
+    else:
+        e0 = np.zeros((1, 3))
+        e1 = np.ones((1, 3))
+    de = 1
     for t in range(0, para['sweep_time']):
-        A.update_left_env(tensor)
-        A.update_right_env(tensor)
+        if A.is_symme_env:
+            A.update_ort_tensor_mps('left')
+            A.update_left_env(tensor)
+        else:
+            A.update_ort_tensor_mps('both')
+            A.update_left_env(tensor)
+            A.update_right_env(tensor)
         A.update_central_tensor(tensor)
         if t % para['dt_ob'] == 0:
+            A.rho_from_central_tensor()
             e1 = A.observe_energy(hamilt)
-            de = abs(e0-e1)
+            if is_print:
+                print('At the %g-th sweep: Eb = ' % t + str(e1))
+            de = np.sum(abs(e0-e1))/A.n_site
             if de > para['break_tol']:
                 e0 = e1
-            else:
+            elif is_print:
                 print('Converged with de = %g' % de)
                 break
         if t == para['sweep_time']:
             print('Not sufficiently converged with de = %g' % de)
+    ob = {'eb': e1}
     info['t_cost'] = time.time() - t_start
-    return A
+    if is_print:
+        print('Total time cost: %g' % info['t_cost'])
+    return A, ob, info
+
+
+# ======================================================
+def deep_dmrg_infinite_size(para=None):
+    from MPSClass import MpsDeepInfinite as Minf
+    is_print = True
+
+    t_start = time.time()
+    info = dict()
+    if is_print:
+        print('Start deep DMRG calculation')
+    if para is None:
+        para = pm.generate_parameters_deep_mps_infinite()
+
+    hamilt = hamiltonian_heisenberg(para['spin'], para['jxy'], para['jxy'],
+                                    para['jz'], -para['hx']/2, -para['hz']/2)
+    tensor = hamiltonian2cell_tensor(hamilt, para['tau'])
+    A = Minf(para['form'], para['d'], para['chi'], para['d'], para['chib0'], para['chib'],
+             para['is_symme_env'], n_site=para['n_site'], is_debug=is_debug)
+    # use standard DMRG to get the GS MPS
+    A, ob0, info0 = dmrg_infinite_size(para, A, hamilt)
+    # get uMPO from the MPS
+    A.get_unitary_mpo_from_mps()
+
+    if A.n_site == 1:
+        e0 = 0
+        e1 = 1
+    else:
+        e0 = np.zeros((1, 3))
+        e1 = np.ones((1, 3))
+    de = 1
+    for t in range(0, para['sweep_time']):
+        A.update_ort_tensor_dmps('left')
+        A.update_left_env_dmps_simple(tensor)
+        if not A.is_symme_env:
+            A.update_ort_tensor_dmps('right')
+            A.update_right_env_dmps_simple(tensor)
+        A.update_central_tensor_dmps(tensor)
+        if t % para['dt_ob'] == 0:
+            A.rho_from_central_tensor_dmps()
+            e1 = A.observe_energy(hamilt)
+            if is_print:
+                print('At the %g-th sweep: Eb = ' % t + str(e1))
+            de = np.sum(abs(e0-e1))
+            if de > para['break_tol']:
+                e0 = e1
+            elif is_print:
+                print('Converged with de = %g' % de)
+                break
+        if t == para['sweep_time']:
+            print('Not sufficiently converged with de = %g' % de)
+    ob = {'eb': e1}
+    info['t_cost'] = time.time() - t_start
+    if is_print:
+        print('Total time cost: %g' % info['t_cost'])
+    return A, ob, info, ob0, info0
 
 
 # ======================================================
@@ -171,6 +259,7 @@ def get_bond_energies(eb_full, positions, index2):
 
 
 def plot_finite_dmrg(x, A, para, ob):
+    mp.figure()
     if x is 'eb':  # plot bond energies
         if para['lattice'] == 'chain':
             nh1 = ob['eb'].size - (para['bound_cond'] == 'periodic')
@@ -213,4 +302,18 @@ def plot_finite_dmrg(x, A, para, ob):
         mp.ylabel('entanglement entropy')
         print('entanglement entropy = ')
         print(str(A.ent.T))
+    elif x is 'corr':
+        mp.subplot(2, 1, 1)
+        mp.plot(range(1, ob['corr_x'].__len__() + 1), ob['corr_x'], '-ro')
+        mp.ylabel(r'$\langle \hat{s}^x \hat{s}^x \rangle$')
+        # mp.legend(handles=[f1, ], labels=[r'$\langle \hat{s}_n^x \rangle$'], loc='best')
+        mp.subplot(2, 1, 2)
+        mp.plot(range(1, ob['corr_x'].__len__() + 1), ob['corr_x'], '--bs')
+        mp.xlabel('lattice site')
+        mp.ylabel(r'$\langle \hat{s}^z \hat{s}^z \rangle$')
+        # mp.legend(handles=[f2, ], labels=[r'$\langle \hat{s}_n^z \rangle$'], loc='best')
+        print('<sx sx> = ')
+        print(str(ob['corr_x'].T))
+        print('<sz sz> = ')
+        print(str(ob['corr_z'].T))
     mp.show()

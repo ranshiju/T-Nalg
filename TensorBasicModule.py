@@ -1,6 +1,10 @@
 import numpy as np
-from BasicFunctionsSJR import sort_list, trace_stack, print_error, arg_find_array
+import math
+import time
+from BasicFunctionsSJR import sort_list, trace_stack, print_error, arg_find_array, \
+    combination, empty_list
 from termcolor import cprint
+
 is_debug = False
 if is_debug:
     cprint('Note: you are in the debug mode of module \'Basic_Functions_SJR\'', 'cyan')
@@ -12,7 +16,6 @@ class CONT:
         self._is_debug = _is_debug
         self.tensors = tensors
         self.indexes = indexes
-        self.n_tensor = self.tensors.__len__()
         self.bond_open = list()
         self.bond_ark = list()
         self.find_open_ark_bonds()
@@ -21,14 +24,15 @@ class CONT:
             self.check_consistency()
 
         while self.bond_ark.__len__() > 0:
-            tensor_now, index_now, pos = self.tensors_and_bonds_in_nth_contraction(self.bond_ark[0])
-            t_new, ind_new = self.contract_now(tensor_now, index_now)
-            self.update_tensors_and_indexes(pos, t_new, ind_new)
-        ind = sorted(range(len(indexes[0])), key=lambda k: indexes[0][k])
-        self.result = self.tensors[0].transpose(ind)
+            pos = self.tensors_and_bonds_in_nth_contraction(self.bond_ark[0])
+            self.contract_now(pos)
+            if self._is_debug:
+                print('Dummy indexes left: ' + str(self.bond_ark))
+        ind = sorted(range(len(self.indexes[-1])), key=lambda k: self.indexes[-1][k])
+        self.result = self.tensors[-1].transpose(ind[::-1])
 
     def check_consistency(self):
-        if self.n_tensor != len(self.indexes):
+        if len(self.tensors) != len(self.indexes):
             print_error('ErrorNCON: the number of tensors and number of index tuples are not consistent', False)
         if self.bond_open[0] != -1:
             print_error('NumberingError: the starting number of open bonds should be -1', False)
@@ -42,44 +46,43 @@ class CONT:
                         'numbering. Please check.')
 
     def find_open_ark_bonds(self):
-        self.bond_open = set()
-        self.bond_ark = set()
-        for n in range(0, self.n_tensor):
-            for i in range(0, self.indexes[n].__len__()):
-                if self.indexes[n][i] < 0:
-                    self.bond_open.add(self.indexes[n][i])
-                elif self.indexes[n][i] > 0:
-                    self.bond_ark.add(self.indexes[n][i])
-        self.bond_open = list(self.bond_open)
-        self.bond_open.sort(reverse=True)
-        self.bond_ark = list(self.bond_ark)
-        self.bond_ark.sort()
+        if self._is_debug:
+            self.bond_open = set()
+            self.bond_ark = set()
+            for n in range(0, self.tensors.__len__()):
+                for i in range(0, self.indexes[n].__len__()):
+                    if self.indexes[n][i] < 0:
+                        self.bond_open.add(self.indexes[n][i])
+                    elif self.indexes[n][i] > 0:
+                        self.bond_ark.add(self.indexes[n][i])
+            self.bond_open = list(self.bond_open)
+            self.bond_open.sort(reverse=True)
+            self.bond_ark = list(self.bond_ark)
+            self.bond_ark.sort()
+        else:
+            bond_ark_max = 0
+            for n in range(0, self.tensors.__len__()):
+                bond_ark_max = max(bond_ark_max, max(self.indexes[n]))
+            self.bond_ark = list(range(1, bond_ark_max+1))
 
     def tensors_and_bonds_in_nth_contraction(self, bond):
         # n is the number of the contracted bond
-        n_found = 0
-        tensors_now = list()
-        index_now = list()
         pos = list()
-        for n in range(0, self.n_tensor):
+        for n in range(0, self.tensors.__len__()):
             if bond in self.indexes[n]:
-                n_found += 1
-                tensors_now.append(self.tensors[n])
-                index_now.append(self.indexes[n])
                 pos.append(n)
-            if n_found == 2:
-                return tensors_now, index_now, pos
+            if pos.__len__() == 2:
+                return pos
 
-    def contract_now(self, t_now, ind_now):
-        # print(t_now[0].shape)
-        # print(ind_now[0])
-        # print(t_now[1].shape)
-        # print(ind_now[1])
-        ind_con = list(set(ind_now[0]) & set(ind_now[1]))
-        ind_con_pos = [list(range(0, ind_con.__len__())), list(range(0, ind_con.__len__()))]
+    def contract_now(self, pos):
+        if self._is_debug:
+            t0 = time.time()
+        ind_now = [self.indexes[pos[0]], self.indexes[pos[1]]]
+        ind_con = list(set(ind_now[0]) & set(ind_now[1]))  # indexes to be contracted
+        ind_con_pos = [[], []]
         for i in range(0, ind_con.__len__()):
-            ind_con_pos[0][i] = ind_now[0].index(ind_con[i])
-            ind_con_pos[1][i] = ind_now[1].index(ind_con[i])
+            ind_con_pos[0].append(ind_now[0].index(ind_con[i]))
+            ind_con_pos[1].append(ind_now[1].index(ind_con[i]))
         ind_left_pos = [list(range(0, ind_now[0].__len__())), list(range(0, ind_now[1].__len__()))]
         for i in range(0, ind_con.__len__()):
             ind_left_pos[0].remove(ind_con_pos[0][i])
@@ -88,29 +91,29 @@ class CONT:
             ind_now[0].remove(ind_con[i])
             ind_now[1].remove(ind_con[i])
             self.bond_ark.remove(ind_con[i])
-
-        pos0 = ind_left_pos[0] + ind_con_pos[0]
-        pos1 = ind_con_pos[1] + ind_left_pos[1]
-        s0 = t_now[0].shape
-        s1 = t_now[1].shape
-        t_new = t_now[0].transpose(pos0).reshape(np.prod([s0[i] for i in ind_left_pos[0]]),
-                                                 np.prod([s0[i] for i in ind_con_pos[0]]))
-        t_new = t_new.dot(t_now[1].transpose(pos1).reshape(np.prod([s1[i] for i in ind_con_pos[1]]),
-                                                           np.prod([s1[i] for i in ind_left_pos[1]])))
-        s_new0 = [s0[i] for i in ind_left_pos[0]]
-        s_new1 = [s1[i] for i in ind_left_pos[1]]
-        t_new = t_new.reshape(s_new0 + s_new1)
+        if self._is_debug:
+            print('Indexes to be contracted in this stage: ' + str(ind_con))
+            print('S1 in contract_now: ')
+            print(t0 - time.time())
+            t0 = time.time()
+        self.tensors[min(pos)] = np.tensordot(self.tensors[pos[0]], self.tensors[pos[1]],
+                                              (ind_con_pos[0], ind_con_pos[1]))
         ind_new = ind_now[0] + ind_now[1]
-        return t_new, ind_new
+        if self._is_debug:
+            print('S2 in contract_now: ')
+            print(t0 - time.time())
+            t0 = time.time()
 
-    def update_tensors_and_indexes(self, pos, t_new, ind_new):
         self.tensors.__delitem__(max(pos))
-        self.tensors.__delitem__(min(pos))
         self.indexes.__delitem__(max(pos))
-        self.indexes.__delitem__(min(pos))
-        self.tensors.append(t_new)
-        self.indexes.append(ind_new)
-        self.n_tensor -= 1
+        # self.tensors.__delitem__(min(pos))
+        # self.indexes.__delitem__(min(pos))
+        # self.tensors.append(t_new)
+        # self.indexes.append(ind_new)
+        self.indexes[min(pos)] = ind_new
+        if self._is_debug:
+            print('S3 in contract_now: ')
+            print(t0 - time.time())
 
 
 def cont(tensors, indexes):
@@ -128,8 +131,18 @@ def cont(tensors, indexes):
            [ 42  57  72]
            [ 55  74  93]]
     """
-    _tmp = CONT(tensors, indexes)
+    _tmp = CONT(tensors, indexes, is_debug)
     return _tmp.result
+
+
+def symmetrical_rand_peps_tensor(d, chi, n_virtual):
+    ind = (d, ) + (chi, ) * n_virtual
+    tensor = eval('np.random.randn' + str(ind))
+    if n_virtual == 2:
+        tensor = (tensor + tensor.transpose(0, 2, 1))/2
+    elif n_virtual == 3:
+        tensor = (tensor + tensor.transpose(0, 2, 3, 1) + tensor.transpose(0, 3, 1, 2))/3
+    return tensor
 
 
 def random_open_mps(l, d, chi):
@@ -212,6 +225,49 @@ def ones_open_mps(l, d, chi):
     return mps
 
 
+def tensor_zn(shape, way):
+    dim = len(shape)
+    print(dim)
+    ind = empty_list(dim, 0)
+    shape = np.array(shape).reshape(-1, )
+    tensor = np.zeros(shape)
+    while ind[-1] != shape[-1]:
+        if sum(ind) % 2 == 0:
+            if way is 'randn':
+                tensor[tuple(ind)] = np.random.randn()
+            elif way is 'one':
+                tensor[tuple(ind)] = 1
+        ind[0] += 1
+        for n in range(0, dim - 1):
+            if ind[n] == shape[n]:
+                ind[n] = 0
+                ind[n + 1] += 1
+    return tensor
+
+
+def reorder_vectors_in_mat(mat, order, which):
+    mat1 = np.zeros(mat.shape)
+    for n in range(0, len(order)):
+        if which == 0:
+            mat1[n, :] = mat[order[n], :]
+        else:
+            mat1[:, n] = mat[:, order[n]]
+    return mat1
+
+
+def reorder_index_tensor(tensor, orders, bonds):
+    ndim = tensor.ndim
+    for n in range(0, len(bonds)):
+        permute0 = [bonds[n]] + list(range(0, bonds[n])) + list(range(bonds[n] + 1, ndim))
+        permute1 = list(range(1, bonds[n] + 1)) + [0] + list(range(bonds[n] + 1, ndim))
+        shape0 = tensor.shape
+        shape1 = [shape0[x] for x in permute0]
+        tensor = tensor.transpose(permute0).reshape(shape1[0], int(np.prod(shape1[1:])))
+        tensor = reorder_vectors_in_mat(tensor, orders[n], 0)
+        tensor = tensor.reshape(shape1).transpose(permute1)
+    return tensor
+
+
 def decompose_tensor_one_bond(tensor, n, way='qr'):
     """
     Decompose a tensor on the n-th bond to make it orthogonal on n-th bond
@@ -255,11 +311,12 @@ def decompose_tensor_one_bond(tensor, n, way='qr'):
     return tensor, v, d_min
 
 
-def left2right_decompose_tensor(tensor, way='qr'):
+def left2right_decompose_tensor(tensor, way='qr', is_full=False):
     """
     Decompose a rank 3 tensor on the 3rd bond
     :param tensor: a rank 3 tensor
     :param way:  svd decomposition or qr decomposition
+    :param is_full:  is svd, is calculating full matrix
     :return:  decomposed tensor, matrix, dimension of new bond, and  singular value spectrum
     Example:
         >>>T = np.random.randn(4, 4, 4)
@@ -280,8 +337,8 @@ def left2right_decompose_tensor(tensor, way='qr'):
     tensor = tensor.reshape(s1[0] * s1[1], s1[2])
     if way == 1 or way == "svd":
         # Use SVD decomposition
-        tensor, lm, v = np.linalg.svd(tensor)
-        v = np.dot(np.diag(lm), v[:dim, :])
+        tensor, lm, v = np.linalg.svd(tensor, full_matrices=is_full)
+        v = np.diag(lm[:dim]).dot(v[:dim, :])
     else:
         # Use QR decomposition
         tensor, v = np.linalg.qr(tensor)
@@ -291,11 +348,12 @@ def left2right_decompose_tensor(tensor, way='qr'):
     return tensor, v, dim, lm
 
 
-def right2left_decompose_tensor(tensor, way='qr'):
+def right2left_decompose_tensor(tensor, way='qr', is_full=False):
     """
     Decompose a rank 3 tensor on the 1rd bond
     :param tensor: a rank 3 tensor
     :param way:  svd decomposition or qr decomposition
+    :param is_full:  is svd, is calculating full matrix
     :return:  decomposed tensor, matrix, dimension of new bond, and  singular value spectrum
     Example:
         >>>T = np.random.randn(4, 4, 4)
@@ -315,8 +373,8 @@ def right2left_decompose_tensor(tensor, way='qr'):
     dim = min(s1[0], s1[1]*s1[2])
     if way == 1 or way == 'svd':
         # Use SVD decomposition
-        tensor, lm, v = np.linalg.svd(tensor.T)
-        v = np.dot(np.diag(lm), v[:dim, :])
+        tensor, lm, v = np.linalg.svd(tensor.T, full_matrices=is_full)
+        v = np.dot(np.diag(lm[:dim]), v[:dim, :])
     else:
         # Use QR decomposition
         tensor, v = np.linalg.qr(tensor.T)
@@ -354,13 +412,12 @@ def absorb_matrix2tensor(tensor, mat, bond):
         tensor1 = tensor.reshape(np.prod(s[0:nd - 1]), s[nd - 1]).dot(mat)
         s[-1] = mat.shape[1]
     else:
-        ind = np.arange(0, bond)
-        ind = np.append(ind, np.arange(bond + 1, nd))
-        tensor1 = tensor.transpose(np.append(ind, bond)).reshape(np.prod(s[ind]), s[bond]).dot(mat)
+        ind = list(range(0, bond)) + list(range(bond + 1, nd))
+        tensor1 = tensor.transpose(ind + [bond]).reshape(np.prod([s[i] for i in ind]),
+                                                         s[bond]).dot(mat)
         s[bond] = mat.shape[1]
-        tensor1 = tensor1.reshape(s[np.append(ind, bond)])
-        ind = np.arange(0, bond)
-        ind = np.append(np.append(ind, nd - 1), np.arange(bond, nd - 1))
+        tensor1 = tensor1.reshape([s[i] for i in (ind + [bond])])
+        ind = list(range(0, bond)) + [nd - 1] + list(range(bond, nd - 1))
         tensor1 = tensor1.transpose(ind)
     if bond == 0 or bond == nd - 1:
         tensor1 = tensor1.reshape(s)
@@ -399,11 +456,12 @@ def absorb_matrices2tensor_full_fast(tensor, mats):
     for n in range(nb-1, -1, -1):
         tensor = tensor.reshape(np.prod(s[:nb-1]), s[nb-1]).dot(mats[n])
         s[-1] = mats[n].shape[1]
-        ind = np.append(nb-1, np.arange(0, nb-1))
+        ind = [nb-1] + list(range(0, nb-1))
         tensor = tensor.reshape(s).transpose(ind)
         s = s[ind]
     if is_debug and is_bug:
         trace_stack()
+    # tensor = CONT([tensor] + mats, [[1, 2, 3], [1, -1], [2, -2], [3, -3]])
     return tensor
 
 
@@ -431,6 +489,8 @@ def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
     if is_debug:
         if nm != tensor.ndim:
             print_error('InputError: the number of matrices should be equal to the number of indexes of tensor')
+    if type(bonds) is list or tuple:
+        bonds = np.array(bonds)
     if bonds.size == 0:  # set default of bonds: contract all matrices in order, starting from the 0th bond
         bonds = np.arange(0, nm)
     if mat_bond < 0:  # set default of mat_bond: contract the 1st bond of each matrix
@@ -451,7 +511,24 @@ def absorb_matrices2tensor(tensor, mats, bonds=np.zeros(0), mat_bond=-1):
     return tensor
 
 
-def bound_vec_operator_left2right(tensor, op=np.zeros(0), v=np.zeros(0), normalize=False, symme=False):
+def absorb_vectors2tensors(tensor, vecs, bonds):
+    order = np.argsort(bonds)
+    for n in range(len(bonds), -1, -1):
+        tensor = np.tensordot(tensor, vecs[order[n]], ([bonds[order[n]]], [0]))
+    return tensor
+
+
+def scalar2vector(x, dim):
+    v = np.zeros((dim, ))
+    theta = x*math.pi/2
+    for d in range(0, dim):
+        v[d] = math.sqrt(combination(dim-1, d-1)) * (math.cos(theta)**(dim-d)) \
+               * (math.sin(theta)**(d-1))
+    return v
+
+
+def bound_vec_operator_left2right(tensor, op=np.zeros(0), v=np.zeros(0),
+                                  normalize=False, symme=False):
     """
     Contract left boundary vector with transfer matrix of MPS
     :param tensor:  a tensor of MPS
@@ -496,7 +573,8 @@ def bound_vec_operator_left2right(tensor, op=np.zeros(0), v=np.zeros(0), normali
     return v1
 
 
-def bound_vec_operator_right2left(tensor, op=np.zeros(0), v=np.zeros(0), normalize=False, symme=False):
+def bound_vec_operator_right2left(tensor, op=np.zeros(0), v=np.zeros(0), normalize=False,
+                                  symme=False):
     """
     Contract right boundary vector with transfer matrix of MPS
     :param tensor:  a tensor of MPS
@@ -541,6 +619,36 @@ def bound_vec_operator_right2left(tensor, op=np.zeros(0), v=np.zeros(0), normali
     return v1
 
 
+def bound_vec_with_phys_left2right(tensor, v=np.zeros(0), normalize=False):
+    s = tensor.shape
+    if v.size == 0:
+        tmp = tensor.reshape(s[0], s[1] * s[2])
+        v = tmp.T.conj().dot(tmp).reshape(s[1], s[2], s[1], s[2]).transpose(0, 2, 1, 3)
+    elif v.ndim == 2:
+        v = np.tensordot(v, tensor, ([1], [0]))
+        v = np.tensordot(tensor.conj(), v, ([0], [0])).transpose(0, 2, 1, 3)
+    elif v.ndim == 4:
+        v = cont([tensor, tensor.conj(), v], [[2, 3, -4], [1, 3, -3], [-1, -2, 1, 2]])
+    if normalize:
+        v /= np.linalg.norm(v.reshape(-1, ))
+    return v
+
+
+def bound_vec_with_phys_right2left(tensor, v=np.zeros(0), normalize=False):
+    s = tensor.shape
+    if v.size == 0:
+        tmp = tensor.reshape(s[0] * s[1], s[2])
+        v = tmp.conj().dot(tmp.T).reshape(s[0], s[1], s[0], s[1]).transpose(1, 3, 0, 2)
+    elif v.ndim == 2:
+        v = np.tensordot(tensor, v, ([2], [1]))
+        v = np.tensordot(tensor.conj(), v, ([2], [2])).transpose(1, 3, 0, 2)
+    elif v.ndim == 4:
+        v = cont([tensor, tensor.conj(), v], [[-4, 3, 2], [-3, 3, 1], [-1, -2, 1, 2]])
+    if normalize:
+        v /= np.linalg.norm(v.reshape(-1, ))
+    return v
+
+
 def transfer_matrix_mps(tensor):
     """
     Obtain a transfer matrix of MPS
@@ -566,7 +674,85 @@ def transfer_matrix_mps(tensor):
     return tm
 
 
-def normalize_tensor(tensor, if_flatten=False):
+def transformation_from_env_mats(ml, mr, lmm=None, dc=None, norm_way=1):
+    # lmm: lm in the middle bond
+    # dc: dimension cut-off (None means no truncation)
+    lml, ul = np.linalg.eigh(ml)
+    lmr, ur = np.linalg.eigh(mr)
+    lml = lml ** 0.5
+    lmr = lmr ** 0.5
+    # lml /= np.linalg.norm(lml)
+    # lmr /= np.linalg.norm(lmr)
+    if lmm is None:
+        m_mid = np.diag(lml).dot(ul.conj().T).dot(ur.conj()).dot(np.diag(lmr))
+    else:
+        m_mid = np.diag(lml).dot(ul.conj().T).dot(np.diag(lmm)).dot(ur.conj()).dot(np.diag(lmr))
+    u, lm, v = np.linalg.svd(m_mid)
+    if dc is not None:
+        dc = min(dc, lm.shape[0])
+    else:
+        dc = lm.shape[0]
+    ul = ul.dot(np.linalg.pinv(np.diag(lml))).dot(u[:, :dc])
+    ur = ur.dot(np.linalg.pinv(np.diag(lmr))).dot(v[:dc, :].T)
+    lm = lm[:dc]
+    if norm_way == 1:
+        norm = np.linalg.norm(lm)
+        lm /= norm
+        norm = norm ** 0.5
+        ul *= norm
+        ur *= norm
+    elif norm_way == 2:
+        lm = normalize_tensor(lm)[0]
+        ul = normalize_tensor(ul)[0]
+        ur = normalize_tensor(ur)[0]
+    return ul, ur, lm, dc
+
+
+def bond_permutation_transformation(order):
+    # Contracting the first bond of u, i.e., T.dot(u)
+    dim = len(order)
+    u = np.zeros((dim, dim))
+    for n in range(0, dim):
+        u[n, order[n]] = 1
+    return u
+
+
+def operate_tensor_slice(tensor, nb, slice, data):
+    """
+    (for the nb-th bond) tensor[:, ..., slice[0]:slice[1], ..., :] = data[:, :, ..., :, :]
+    :param tensor:
+    :param nb:
+    :param slice:
+    :param data:
+    :return:
+    Example:
+    >>> x = np.random.randn(4, 6, 4)
+    >>> y = np.random.randn(4, 2, 4)
+    >>> x1 = x.copy()
+    >>> x1[:, 0:2, :] = y
+    >>> x2 = x.copy()
+    >>> x2 = operate_tensor_slice(x2, 1, [0, 2], y)
+    >>> err = np.linalg.norm((x1 - x2).reshape(-1, ))
+    >>> print(err)
+    """
+    exp = ''
+    for n in range(0, tensor.ndim):
+        exp += ':'
+        if n != tensor.ndim-1:
+            exp += ','
+    if type(slice) is str:
+        exp1 = exp[:nb * 2] + slice + exp[nb * 2 + 1:]
+    else:
+        exp1 = exp[:nb * 2] + str(slice[0]) + ':' + str(slice[1]) + exp[nb * 2 + 1:]
+    exec('tensor[' + exp1 + '] = data[' + exp + ']')
+    return tensor
+
+
+def off_diagonal_mat(mat):
+    return mat - np.diag(np.diag(mat))
+
+
+def normalize_tensor(tensor, if_flatten=False, is_enforce=False):
     """
     Normalize a tensor
     :param tensor:  a tensor
@@ -580,11 +766,10 @@ def normalize_tensor(tensor, if_flatten=False):
 
                  [[0.35355339, 0.35355339],
                   [0.35355339, 0.35355339]]]), 2.8284271247461903)
-
     """
     v = tensor.reshape(-1, )
     norm = np.linalg.norm(v)
-    if norm < 1e-30:
+    if norm < 1e-30 and not is_enforce:
         cprint('InfWarning: norm is too small to normalize', 'magenta')
         trace_stack()
         if if_flatten:
@@ -638,7 +823,7 @@ def is_identity_by_norm(mat, tol=1e-20):
     return is_id
 
 
-def is_identity(mat, tol=1e-20, sample_t=10):
+def is_identity(mat, tol=1e-15, sample_t=10):
     """
     Check if matrix is identity matrix by sampling
     :param mat:  matrix

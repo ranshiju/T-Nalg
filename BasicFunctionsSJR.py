@@ -3,11 +3,14 @@
 # np.vstack((m1,m2))：合并两个矩阵， 成（d1+d2，d）
 
 import os
+import re
 import pickle
 import inspect
 import numpy as np
 import matplotlib.pyplot as mp
 from termcolor import cprint, colored
+from math import factorial
+import struct
 
 
 def info_contact():
@@ -38,6 +41,7 @@ def save_pr(path, file, data, names):
       type(z) is dict
     """
     mkdir(path)
+    # print(os.path.join(path, file))
     s = open(os.path.join(path, file), 'wb')
     tmp = dict()
     for i in range(0, len(names)):
@@ -98,6 +102,20 @@ def mkdir(path):
     if not path_flag:
         os.makedirs(path)
     return path_flag
+
+
+def search_file(path, exp):
+    content = os.listdir(path)
+    exp = re.compile(exp)
+    result = list()
+    for x in content:
+        if re.match(exp, x):
+            result.append(os.path.join(path, x))
+    return result
+
+
+def output_txt(x, filename='data'):
+    np.savetxt(filename + '.txt', x)
 
 
 def sort_list(a, order):
@@ -216,6 +234,107 @@ def arg_find_list(x, target, n=1, which='first'):
         length = x.__len__()
         ind = [length - tmp - 1 for tmp in ind]
     return ind
+
+
+def sort_vecs(mat, order, which):
+    s = mat.shape
+    mat1 = np.zeros(s)
+    if which == 0:  # sort as row vectors
+        for n in range(0, s[0]):
+            mat1[n, :] = mat[order[n], :]
+    else:
+        for n in range(0, s[1]):
+            mat1[:, n] = mat[:, order[n]]
+    return mat1
+
+
+def arrangement(n, m):
+    return factorial(n) / factorial(n-m)
+
+
+def combination(n, m):
+    return arrangement(n, m) / factorial(m)
+
+
+def generate_indexes(ndim):
+    key0 = {'0', '1'}
+    key = set()
+    if ndim == 1:
+        return key0
+    else:
+        for x1 in key0:
+            for x2 in generate_indexes(ndim - 1):
+                key.add(x1 + x2)
+        return key
+
+
+def get_z2_indexes(ndim, parity=0):
+    indexes_z2 = set()
+    indexes = generate_indexes(ndim)
+    for x in indexes:
+        x1 = [int(m) for m in x]
+        if sum(x1) % 2 == parity:
+            indexes_z2.add(x)
+    return indexes_z2
+
+# ========================================
+# MNIST functions
+def decode_idx3_ubyte(idx3_ubyte_file):
+    """
+    Downloaded from: https://blog.csdn.net/jiede1/article/details/77099326
+    解析idx3文件的通用函数
+    :param idx3_ubyte_file: idx3文件路径
+    :return: 数据集
+    """
+    # 读取二进制数据
+    bin_data = open(idx3_ubyte_file, 'rb').read()
+
+    # 解析文件头信息，依次为魔数、图片数量、每张图片高、每张图片宽
+    offset = 0
+    fmt_header = '>iiii'   #'>IIII'是说使用大端法读取4个unsinged int32
+    magic_number, num_images, num_rows, num_cols = struct.unpack_from(fmt_header, bin_data, offset)
+    # print('魔数:%d, 图片数量: %d张, 图片大小: %d*%d' % (magic_number, num_images, num_rows, num_cols))
+
+    # 解析数据集
+    image_size = num_rows * num_cols
+    offset += struct.calcsize(fmt_header)
+    # print("offset: ",offset)
+    fmt_image = '>' + str(image_size) + 'B'   # '>784B'的意思就是用大端法读取784个unsigned byte
+    images = np.empty((num_images, num_rows*num_cols))
+    for i in range(num_images):
+        # if (i + 1) % 10000 == 0:
+        #     print('已解析 %d' % (i + 1) + '张')
+        images[i] = np.array(struct.unpack_from(fmt_image, bin_data, offset)).reshape((num_rows*num_cols))
+        offset += struct.calcsize(fmt_image)
+    return images.T
+
+
+def decode_idx1_ubyte(idx1_ubyte_file):
+    """
+    Downloaded from: https://blog.csdn.net/jiede1/article/details/77099326
+    解析idx1文件的通用函数
+    :param idx1_ubyte_file: idx1文件路径
+    :return: 数据集
+    """
+    # 读取二进制数据
+    bin_data = open(idx1_ubyte_file, 'rb').read()
+
+    # 解析文件头信息，依次为魔数和标签数
+    offset = 0
+    fmt_header = '>ii'
+    magic_number, num_images = struct.unpack_from(fmt_header, bin_data, offset)
+    # print('魔数:%d, 图片数量: %d张' % (magic_number, num_images))
+
+    # 解析数据集
+    offset += struct.calcsize(fmt_header)
+    fmt_image = '>B'
+    labels = np.empty(num_images)
+    for i in range(num_images):
+        # if (i + 1) % 10000 == 0:
+            # print('已解析 %d' % (i + 1) + '张')
+        labels[i] = struct.unpack_from(fmt_image, bin_data, offset)[0]
+        offset += struct.calcsize(fmt_image)
+    return labels
 
 
 # =========================================

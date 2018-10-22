@@ -9,7 +9,7 @@ from BasicFunctionsSJR import input_and_check_type, input_and_check_value, \
 from DMRG_anyH import dmrg_finite_size, sort_positions, positions_set2array
 
 is_from_input = True
-is_load_data = True
+is_load_data = False
 
 
 def print_info_to_be_added(model, method):
