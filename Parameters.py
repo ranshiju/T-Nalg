@@ -99,7 +99,6 @@ def parameter_dmrg_square():
     para['bound_cond'] = 'open'
     para['square_width'] = 4  # width of the square lattice
     para['square_height'] = 4  # height of the square lattice
-    para['l'] = para['square_width'] * para['square_height']
     para['spin'] = 'half'
     op = hm.spin_operators(para['spin'])
     para['op'] = [op['id'], op['sx'], op['sy'], op['sz'], op['su'], op['sd']]
@@ -187,6 +186,7 @@ def make_consistent_parameter_dmrg(para):
             para['coeff2'][n * 3 + 1] = para['jxy'] / 2
             para['coeff2'][n * 3 + 2] = para['jz']
     elif para['lattice'] is 'square':
+        para['l'] = para['square_width'] * para['square_height']
         para['op'].append(-para['hx'] * para['op'][1] - para['hz'] * para['op'][3])
         para['index1'] = np.mat(np.arange(0, para['l']))
         para['index1'] = np.vstack((para['index1'], 6 * np.ones((1, para['l'])))).T.astype(int)
